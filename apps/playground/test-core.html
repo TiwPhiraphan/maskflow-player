@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maskflow Core - Plain HTML Test</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #0f111a;
+        color: #e2e8f0;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 1.5rem;
+      }
+      .player-container {
+        max-width: 800px;
+        background: #1a1d2d;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+      video {
+        width: 100%;
+        display: block;
+        background: #000;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 16px;
+        background: #141622;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      button {
+        background: #282c40;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 8px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      button:hover {
+        background: #3b4260;
+        border-color: #8b5cf6;
+      }
+      .state-display {
+        margin-top: 20px;
+        max-width: 800px;
+        background: #141622;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      pre {
+        margin: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.85rem;
+        color: #38bdf8;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Maskflow Core Engine - Test Page</h1>
+    <p>
+      Testing video with:
+      <code
+        >https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF</code
+      >
+    </p>
+
+    <div class="player-container">
+      <video id="test-video" playsinline></video>
+      <div class="controls">
+        <button id="btn-toggle">Play / Pause</button>
+        <button id="btn-seek-back">-10s</button>
+        <button id="btn-seek-fwd">+10s</button>
+        <button id="btn-mute">Toggle Mute</button>
+        <button id="btn-vol-down">Vol -</button>
+        <button id="btn-vol-up">Vol +</button>
+        <button id="btn-speed">Speed (1x / 1.5x / 2x)</button>
+      </div>
+    </div>
+
+    <div class="state-display">
+      <h3>Live Core Player State:</h3>
+      <pre id="state-json">Loading state...</pre>
+    </div>
+
+    <script type="module">
+      import { createPlayer } from 'maskflow';
+
+      const videoEl = document.getElementById('test-video');
+      const stateEl = document.getElementById('state-json');
+
+      const videoSrc =
+        'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF';
+
+      const player = createPlayer(videoEl, {
+        src: videoSrc,
+        onReady: (p) => {
+          console.log('[maskflow] Player ready!', p);
+        },
+        onError: (err) => {
+          console.error('[maskflow] Player error:', err);
+        },
+      });
+
+      function updateStateView() {
+        const state = player.getState();
+        stateEl.textContent = JSON.stringify(
+          {
+            status: state.status,
+            currentTime: state.currentTime.toFixed(2),
+            duration: state.duration.toFixed(2),
+            buffered: (state.buffered * 100).toFixed(1) + '%',
+            volume: (state.volume * 100).toFixed(0) + '%',
+            muted: state.muted,
+            playbackRate: state.playbackRate + 'x',
+            error: state.error,
+          },
+          null,
+          2,
+        );
+      }
+
+      player.store.subscribe(updateStateView);
+      updateStateView();
+
+      // Hook up UI buttons to core player methods
+      document.getElementById('btn-toggle').onclick = () => player.toggle();
+      document.getElementById('btn-seek-back').onclick = () => player.seekBy(-10);
+      document.getElementById('btn-seek-fwd').onclick = () => player.seekBy(10);
+      document.getElementById('btn-mute').onclick = () => player.toggleMute();
+      document.getElementById('btn-vol-down').onclick = () =>
+        player.setVolume(player.getState().volume - 0.1);
+      document.getElementById('btn-vol-up').onclick = () =>
+        player.setVolume(player.getState().volume + 0.1);
+
+      let currentSpeedIndex = 0;
+      const speeds = [1, 1.25, 1.5, 2];
+      document.getElementById('btn-speed').onclick = () => {
+        currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
+        player.setRate(speeds[currentSpeedIndex]);
+      };
+
+      // Expose to window for testing/debugging
+      window.__maskflowPlayer = player;
+    </script>
+  </body>
+</html>
