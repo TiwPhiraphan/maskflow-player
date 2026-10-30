@@ -10,3 +10,4 @@ Initial release of `maskflow`:
 - Mobile gestures (±10s double-tap seek, container queries, bottom sheet).
 - WCAG AA accessibility compliance with zero critical/serious violations.
 - 16:9 default aspect ratio.
+
