@@ -54,6 +54,7 @@ export interface PlayerEvents {
   pipchange: boolean;
   captionschange: boolean;
   doubletap: DoubleTapEvent;
+  toggleshortcuts: void;
   ready: void;
   destroy: void;
 }

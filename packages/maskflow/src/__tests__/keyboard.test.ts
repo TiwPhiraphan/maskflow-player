@@ -99,6 +99,30 @@ describe('KeyboardManager', () => {
     manager.destroy();
   });
 
+  it('handles Home and End keys', () => {
+    const manager = createKeyboardManager(container, mockPlayer);
+
+    container.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    expect(mockPlayer.seek).toHaveBeenCalledWith(0);
+
+    container.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    expect(mockPlayer.seek).toHaveBeenCalledWith(100);
+
+    manager.destroy();
+  });
+
+  it('triggers PiP on i as well as p', () => {
+    const manager = createKeyboardManager(container, mockPlayer);
+
+    container.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', bubbles: true }));
+    expect(mockPlayer.togglePip).toHaveBeenCalledTimes(1);
+
+    container.dispatchEvent(new KeyboardEvent('keydown', { key: 'p', bubbles: true }));
+    expect(mockPlayer.togglePip).toHaveBeenCalledTimes(2);
+
+    manager.destroy();
+  });
+
   it('ignores keys when target is an input', () => {
     const manager = createKeyboardManager(container, mockPlayer);
     const input = document.createElement('input');

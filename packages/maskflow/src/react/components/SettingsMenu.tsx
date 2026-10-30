@@ -7,7 +7,7 @@ export interface SettingsMenuProps {
   state: PlayerState;
 }
 
-type MenuView = 'main' | 'speed' | 'quality';
+type MenuView = 'main' | 'speed' | 'quality' | 'shortcuts';
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 
@@ -37,6 +37,25 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
       triggerRef.current?.focus();
     }
   };
+
+  // Listen for '?' shortcut to toggle shortcuts menu
+  useEffect(() => {
+    return player.events.on('toggleshortcuts', () => {
+      setIsOpen((prev) => {
+        if (!prev) {
+          setCurrentView('shortcuts');
+          player.lockControls(true);
+          return true;
+        } else if (currentView === 'shortcuts') {
+          player.lockControls(false);
+          return false;
+        } else {
+          setCurrentView('shortcuts');
+          return true;
+        }
+      });
+    });
+  }, [player, currentView]);
 
   // Keyboard navigation & Escape key & outside click
   useEffect(() => {
@@ -121,7 +140,79 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
                 </span>
               </button>
             )}
+
+            <button
+              type="button"
+              className="mf-menu-item"
+              role="menuitem"
+              onClick={() => setCurrentView('shortcuts')}
+            >
+              <span>Shortcuts</span>
+              <span className="mf-menu-item-value">? ›</span>
+            </button>
           </>
+        )}
+
+        {currentView === 'shortcuts' && (
+          <div className="mf-shortcuts-view">
+            <button
+              type="button"
+              className="mf-menu-item mf-menu-item-back"
+              onClick={() => setCurrentView('main')}
+            >
+              <span>‹ Back to settings</span>
+            </button>
+            <div className="mf-shortcuts-table">
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>Space</kbd> / <kbd>k</kbd></span>
+                <span>Play / Pause</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>←</kbd> / <kbd>→</kbd></span>
+                <span>Seek 5s</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>j</kbd> / <kbd>l</kbd></span>
+                <span>Seek 10s</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>Home</kbd> / <kbd>End</kbd></span>
+                <span>Start / End</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>0–9</kbd></span>
+                <span>Jump 0%–90%</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>↑</kbd> / <kbd>↓</kbd></span>
+                <span>Volume ±5%</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>m</kbd></span>
+                <span>Mute</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>f</kbd></span>
+                <span>Fullscreen</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>c</kbd></span>
+                <span>Captions</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>p</kbd> / <kbd>i</kbd></span>
+                <span>Picture-in-Picture</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>&lt;</kbd> / <kbd>&gt;</kbd></span>
+                <span>Speed</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys"><kbd>,</kbd> / <kbd>.</kbd></span>
+                <span>Frame (paused)</span>
+              </div>
+            </div>
+          </div>
         )}
 
         {currentView === 'speed' && (

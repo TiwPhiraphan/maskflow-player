@@ -116,7 +116,7 @@ export const MaskflowPlayer = defineComponent({
 
     // Settings menu state
     const isMenuOpen = ref(false);
-    const currentMenuView = ref<'main' | 'speed' | 'quality'>('main');
+    const currentMenuView = ref<'main' | 'speed' | 'quality' | 'shortcuts'>('main');
     const settingsContainerRef = ref<HTMLDivElement | null>(null);
 
     const closeSettings = () => {
@@ -239,6 +239,18 @@ export const MaskflowPlayer = defineComponent({
           seekFlash.value = { ...seekFlash.value, active: false };
           accumulatedSeconds = 0;
         }, 750);
+      });
+
+      player.events.on('toggleshortcuts', () => {
+        if (!isMenuOpen.value) {
+          currentMenuView.value = 'shortcuts';
+          isMenuOpen.value = true;
+          player.lockControls(true);
+        } else if (currentMenuView.value === 'shortcuts') {
+          closeSettings();
+        } else {
+          currentMenuView.value = 'shortcuts';
+        }
       });
     };
 
@@ -455,7 +467,88 @@ export const MaskflowPlayer = defineComponent({
                           ],
                         )
                       : null,
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'mf-menu-item',
+                        role: 'menuitem',
+                        onClick: () => {
+                          currentMenuView.value = 'shortcuts';
+                        },
+                      },
+                      [
+                        h('span', 'Shortcuts'),
+                        h('span', { className: 'mf-menu-item-value' }, '? ›'),
+                      ],
+                    ),
                   ]
+                : currentMenuView.value === 'shortcuts'
+                  ? [
+                      h('div', { className: 'mf-shortcuts-view' }, [
+                        h(
+                          'button',
+                          {
+                            type: 'button',
+                            className: 'mf-menu-item mf-menu-item-back',
+                            onClick: () => {
+                              currentMenuView.value = 'main';
+                            },
+                          },
+                          [h('span', '‹ Back to settings')],
+                        ),
+                        h('div', { className: 'mf-shortcuts-table' }, [
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'Space'), ' / ', h('kbd', 'k')]),
+                            h('span', 'Play / Pause'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', '←'), ' / ', h('kbd', '→')]),
+                            h('span', 'Seek 5s'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'j'), ' / ', h('kbd', 'l')]),
+                            h('span', 'Seek 10s'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'Home'), ' / ', h('kbd', 'End')]),
+                            h('span', 'Start / End'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', '0–9')]),
+                            h('span', 'Jump 0%–90%'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', '↑'), ' / ', h('kbd', '↓')]),
+                            h('span', 'Volume ±5%'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'm')]),
+                            h('span', 'Mute'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'f')]),
+                            h('span', 'Fullscreen'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'c')]),
+                            h('span', 'Captions'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'p'), ' / ', h('kbd', 'i')]),
+                            h('span', 'Picture-in-Picture'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', '<'), ' / ', h('kbd', '>')]),
+                            h('span', 'Speed'),
+                          ]),
+                          h('div', { className: 'mf-shortcut-row' }, [
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', ','), ' / ', h('kbd', '.')]),
+                            h('span', 'Frame (paused)'),
+                          ]),
+                        ]),
+                      ]),
+                    ]
                 : currentMenuView.value === 'speed'
                   ? [
                       h(

@@ -2,6 +2,7 @@
   "name": "maskflow-root",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "build": "pnpm --filter maskflow build",
     "dev": "pnpm --filter playground dev",

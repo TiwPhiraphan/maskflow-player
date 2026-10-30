@@ -495,6 +495,65 @@
   padding-bottom: 10px;
 }
 
+/* Shortcuts View in Settings Menu */
+.mf-shortcuts-view {
+  display: flex;
+  flex-direction: column;
+  max-height: 290px;
+  overflow-y: auto;
+  min-width: 270px;
+}
+
+.mf-shortcuts-view::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mf-shortcuts-view::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+
+.mf-shortcuts-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 16px 12px;
+}
+
+.mf-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--mf-text);
+  gap: 12px;
+}
+
+.mf-shortcut-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mf-shortcut-row kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.mf-shortcut-row span:last-child {
+  color: var(--mf-text-muted);
+  font-size: 0.78rem;
+}
+
 /* ==========================================================================
    Double Tap & Seek Ripple Indicator (YouTube Stacked Style)
    ========================================================================== */

@@ -109,9 +109,25 @@ export function createKeyboardManager(
 
       case 'p':
       case 'P':
+      case 'i':
+      case 'I':
         event.preventDefault();
         player.togglePip();
         break;
+
+      case 'Home':
+        event.preventDefault();
+        player.seek(0);
+        break;
+
+      case 'End': {
+        event.preventDefault();
+        const duration = player.getState().duration;
+        if (duration > 0) {
+          player.seek(duration);
+        }
+        break;
+      }
 
       case '<':
       case ',':
@@ -119,6 +135,9 @@ export function createKeyboardManager(
           event.preventDefault();
           const currentRate = player.getState().playbackRate;
           player.setRate(Math.max(0.25, currentRate - 0.25));
+        } else if (player.getState().status === 'paused') {
+          event.preventDefault();
+          player.seek(Math.max(0, player.getState().currentTime - 0.04));
         }
         break;
 
@@ -128,6 +147,17 @@ export function createKeyboardManager(
           event.preventDefault();
           const currentRate = player.getState().playbackRate;
           player.setRate(Math.min(4, currentRate + 0.25));
+        } else if (player.getState().status === 'paused') {
+          event.preventDefault();
+          player.seek(Math.min(player.getState().duration, player.getState().currentTime + 0.04));
+        }
+        break;
+
+      case '?':
+      case '/':
+        if (event.shiftKey || key === '?') {
+          event.preventDefault();
+          player.events.emit('toggleshortcuts', undefined);
         }
         break;
 
