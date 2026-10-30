@@ -10,5 +10,11 @@
     "path": "packages/maskflow/dist/react/index.js",
     "ignore": ["hls.js", "react", "react-dom"],
     "limit": "25 kB"
+  },
+  {
+    "name": "maskflow/vue",
+    "path": "packages/maskflow/dist/vue/index.js",
+    "ignore": ["hls.js", "vue"],
+    "limit": "25 kB"
   }
 ]
