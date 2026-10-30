@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Maskflow Core - Plain HTML Test</title>
+    <title>Maskflow Core - Features & HLS Test</title>
     <style>
       body {
         margin: 0;
         padding: 24px;
-        background: #0f111a;
+        background: #0b0d14;
         color: #e2e8f0;
         font-family:
           system-ui,
@@ -20,47 +20,64 @@
       }
       h1 {
         margin-top: 0;
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+        color: #f8fafc;
+      }
+      .source-bar {
+        margin-bottom: 16px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
       }
       .player-container {
-        max-width: 800px;
-        background: #1a1d2d;
+        max-width: 840px;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #000;
         border-radius: 12px;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       video {
         width: 100%;
+        height: 100%;
+        object-fit: contain;
         display: block;
-        background: #000;
       }
       .controls {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-        padding: 16px;
-        background: #141622;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        gap: 8px;
+        margin-top: 14px;
+        max-width: 840px;
       }
-      button {
-        background: #282c40;
-        color: #fff;
+      button,
+      select {
+        background: #1e2235;
+        color: #f1f5f9;
         border: 1px solid rgba(255, 255, 255, 0.15);
-        padding: 8px 14px;
+        padding: 8px 12px;
         border-radius: 6px;
         cursor: pointer;
+        font-size: 0.85rem;
         font-weight: 500;
         transition: all 0.2s;
       }
-      button:hover {
-        background: #3b4260;
+      button:hover,
+      select:hover {
+        background: #2e3450;
         border-color: #8b5cf6;
       }
       .state-display {
-        margin-top: 20px;
-        max-width: 800px;
-        background: #141622;
+        margin-top: 18px;
+        max-width: 840px;
+        background: #121522;
         padding: 16px;
         border-radius: 8px;
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -71,94 +88,174 @@
         font-size: 0.85rem;
         color: #38bdf8;
       }
+      .hint {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        margin-top: 8px;
+      }
     </style>
   </head>
   <body>
-    <h1>Maskflow Core Engine - Test Page</h1>
-    <p>
-      Testing video with:
-      <code
-        >https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF</code
-      >
-    </p>
+    <h1>Maskflow Core Engine — Phase 2 Features</h1>
 
-    <div class="player-container">
-      <video id="test-video" playsinline></video>
-      <div class="controls">
-        <button id="btn-toggle">Play / Pause</button>
-        <button id="btn-seek-back">-10s</button>
-        <button id="btn-seek-fwd">+10s</button>
-        <button id="btn-mute">Toggle Mute</button>
-        <button id="btn-vol-down">Vol -</button>
-        <button id="btn-vol-up">Vol +</button>
-        <button id="btn-speed">Speed (1x / 1.5x / 2x)</button>
-      </div>
+    <div class="source-bar">
+      <span><strong>Select Source:</strong></span>
+      <button id="btn-src-user">User Video (MP4)</button>
+      <button id="btn-src-hls">Mux HLS Stream (.m3u8)</button>
+      <select id="select-aspect">
+        <option value="16/9" selected>Aspect Ratio: 16:9 (Default)</option>
+        <option value="4/3">Aspect Ratio: 4:3</option>
+        <option value="1/1">Aspect Ratio: 1:1</option>
+        <option value="21/9">Aspect Ratio: 21:9</option>
+      </select>
     </div>
 
+    <div id="player-box" class="player-container">
+      <video id="test-video" playsinline></video>
+    </div>
+
+    <div class="controls">
+      <button id="btn-toggle">Play / Pause (Space/K)</button>
+      <button id="btn-seek-back">-10s (J / Double-tap left)</button>
+      <button id="btn-seek-fwd">+10s (L / Double-tap right)</button>
+      <button id="btn-mute">Toggle Mute (M)</button>
+      <button id="btn-vol-down">Vol - (Down)</button>
+      <button id="btn-vol-up">Vol + (Up)</button>
+      <button id="btn-fullscreen">Fullscreen (F)</button>
+      <button id="btn-pip">PiP (P)</button>
+      <button id="btn-speed">Speed</button>
+      <select id="select-quality">
+        <option value="auto">Quality: Auto</option>
+      </select>
+    </div>
+
+    <p class="hint">
+      Keyboard shortcuts: <code>Space/K</code> play/pause, <code>&larr;/&rarr;</code> 5s,
+      <code>J/L</code> 10s, <code>M</code> mute, <code>F</code> fullscreen, <code>P</code> PiP,
+      <code>0-9</code> jump, <code>&lt;/&gt;</code> speed.
+    </p>
+
     <div class="state-display">
-      <h3>Live Core Player State:</h3>
+      <h3>Live Player State:</h3>
       <pre id="state-json">Loading state...</pre>
     </div>
 
     <script type="module">
       import { createPlayer } from 'maskflow';
 
+      const playerBox = document.getElementById('player-box');
       const videoEl = document.getElementById('test-video');
       const stateEl = document.getElementById('state-json');
+      const qualitySelect = document.getElementById('select-quality');
+      const aspectSelect = document.getElementById('select-aspect');
 
-      const videoSrc =
-        'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF';
-
-      const player = createPlayer(videoEl, {
-        src: videoSrc,
-        onReady: (p) => {
-          console.log('[maskflow] Player ready!', p);
-        },
-        onError: (err) => {
-          console.error('[maskflow] Player error:', err);
-        },
-      });
-
-      function updateStateView() {
-        const state = player.getState();
-        stateEl.textContent = JSON.stringify(
-          {
-            status: state.status,
-            currentTime: state.currentTime.toFixed(2),
-            duration: state.duration.toFixed(2),
-            buffered: (state.buffered * 100).toFixed(1) + '%',
-            volume: (state.volume * 100).toFixed(0) + '%',
-            muted: state.muted,
-            playbackRate: state.playbackRate + 'x',
-            error: state.error,
-          },
-          null,
-          2,
-        );
-      }
-
-      player.store.subscribe(updateStateView);
-      updateStateView();
-
-      // Hook up UI buttons to core player methods
-      document.getElementById('btn-toggle').onclick = () => player.toggle();
-      document.getElementById('btn-seek-back').onclick = () => player.seekBy(-10);
-      document.getElementById('btn-seek-fwd').onclick = () => player.seekBy(10);
-      document.getElementById('btn-mute').onclick = () => player.toggleMute();
-      document.getElementById('btn-vol-down').onclick = () =>
-        player.setVolume(player.getState().volume - 0.1);
-      document.getElementById('btn-vol-up').onclick = () =>
-        player.setVolume(player.getState().volume + 0.1);
-
-      let currentSpeedIndex = 0;
-      const speeds = [1, 1.25, 1.5, 2];
-      document.getElementById('btn-speed').onclick = () => {
-        currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
-        player.setRate(speeds[currentSpeedIndex]);
+      const SOURCES = {
+        user: 'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF',
+        hls: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
       };
 
-      // Expose to window for testing/debugging
-      window.__maskflowPlayer = player;
+      let currentPlayer = null;
+
+      function initPlayer(src) {
+        if (currentPlayer) {
+          currentPlayer.destroy();
+        }
+
+        currentPlayer = createPlayer(videoEl, {
+          src,
+          aspectRatio: aspectSelect.value,
+          container: playerBox,
+          keyboard: true,
+          gestures: true,
+          persist: true,
+          onReady: () => {
+            console.log('[maskflow] Player ready with src:', src);
+          },
+          onError: (err) => {
+            console.error('[maskflow] Player error:', err);
+          },
+        });
+
+        // Set container aspect-ratio
+        playerBox.style.aspectRatio = currentPlayer.getState().aspectRatio.replace('/', ' / ');
+
+        function updateStateView() {
+          const state = currentPlayer.getState();
+          stateEl.textContent = JSON.stringify(
+            {
+              status: state.status,
+              currentTime: state.currentTime.toFixed(2) + 's',
+              duration: state.duration.toFixed(2) + 's',
+              buffered: (state.buffered * 100).toFixed(1) + '%',
+              volume: (state.volume * 100).toFixed(0) + '%',
+              muted: state.muted,
+              playbackRate: state.playbackRate + 'x',
+              quality: state.quality,
+              aspectRatio: state.aspectRatio,
+              isFullscreen: state.isFullscreen,
+              isPip: state.isPip,
+              controlsVisible: state.controlsVisible,
+              error: state.error,
+            },
+            null,
+            2,
+          );
+        }
+
+        currentPlayer.store.subscribe(updateStateView);
+        updateStateView();
+
+        currentPlayer.events.on('qualitieschange', (qualities) => {
+          qualitySelect.innerHTML = '';
+          qualities.forEach((q) => {
+            const opt = document.createElement('option');
+            opt.value = q.id;
+            opt.textContent = q.label;
+            qualitySelect.appendChild(opt);
+          });
+        });
+
+        window.__maskflowPlayer = currentPlayer;
+      }
+
+      // Initial with user's video
+      initPlayer(SOURCES.user);
+
+      // Buttons
+      document.getElementById('btn-src-user').onclick = () => initPlayer(SOURCES.user);
+      document.getElementById('btn-src-hls').onclick = () => initPlayer(SOURCES.hls);
+
+      document.getElementById('btn-toggle').onclick = () => currentPlayer?.toggle();
+      document.getElementById('btn-seek-back').onclick = () => currentPlayer?.seekBy(-10);
+      document.getElementById('btn-seek-fwd').onclick = () => currentPlayer?.seekBy(10);
+      document.getElementById('btn-mute').onclick = () => currentPlayer?.toggleMute();
+      document.getElementById('btn-vol-down').onclick = () => {
+        if (currentPlayer) currentPlayer.setVolume(currentPlayer.getState().volume - 0.1);
+      };
+      document.getElementById('btn-vol-up').onclick = () => {
+        if (currentPlayer) currentPlayer.setVolume(currentPlayer.getState().volume + 0.1);
+      };
+      document.getElementById('btn-fullscreen').onclick = () => currentPlayer?.toggleFullscreen();
+      document.getElementById('btn-pip').onclick = () => currentPlayer?.togglePip();
+
+      let speedIdx = 0;
+      const speeds = [1, 1.25, 1.5, 2];
+      document.getElementById('btn-speed').onclick = () => {
+        if (!currentPlayer) return;
+        speedIdx = (speedIdx + 1) % speeds.length;
+        currentPlayer.setRate(speeds[speedIdx]);
+      };
+
+      qualitySelect.onchange = (e) => {
+        currentPlayer?.setQuality(e.target.value);
+      };
+
+      aspectSelect.onchange = (e) => {
+        if (currentPlayer) {
+          currentPlayer.setAspectRatio(e.target.value);
+          playerBox.style.aspectRatio = e.target.value.replace('/', ' / ');
+        }
+      };
     </script>
   </body>
 </html>

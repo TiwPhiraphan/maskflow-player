@@ -25,7 +25,13 @@ export interface PlayerState {
   qualities: QualityLevel[];
   captionsEnabled: boolean;
   controlsVisible: boolean;
+  aspectRatio: string; // e.g. "16/9"
   error: string | null;
+}
+
+export interface DoubleTapEvent {
+  side: 'left' | 'right' | 'center';
+  delta?: number | undefined;
 }
 
 export interface PlayerEvents {
@@ -47,6 +53,7 @@ export interface PlayerEvents {
   fullscreenchange: boolean;
   pipchange: boolean;
   captionschange: boolean;
+  doubletap: DoubleTapEvent;
   ready: void;
   destroy: void;
 }
@@ -79,6 +86,9 @@ export interface PlayerOptions {
   keyboard?: boolean | undefined;
   gestures?: boolean | undefined;
   persist?: boolean | undefined;
+  autoHideDelay?: number | undefined;
+  aspectRatio?: string | undefined; // default "16/9"
+  container?: HTMLElement | undefined;
   onReady?: ((player: MaskflowPlayer) => void) | undefined;
   onError?: ((err: unknown) => void) | undefined;
 }
@@ -88,6 +98,7 @@ export interface MaskflowPlayer {
   readonly events: Emitter<PlayerEvents>;
   readonly video: HTMLVideoElement;
   readonly options: PlayerOptions;
+  readonly container: HTMLElement;
 
   getState(): PlayerState;
   play(): Promise<void>;
@@ -103,5 +114,7 @@ export interface MaskflowPlayer {
   togglePip(): Promise<void>;
   toggleCaptions(): void;
   setControlsVisible(visible: boolean): void;
+  lockControls(locked: boolean): void;
+  setAspectRatio(ratio: string): void;
   destroy(): void;
 }

@@ -1,6 +1,13 @@
 import { createStore } from './store';
 import { createEventEmitter } from './events';
 import { attachNativeMedia } from './media/native';
+import { isHlsSource, attachHlsMedia, type HlsAdapter } from './media/hls';
+import { createFullscreenManager } from './features/fullscreen';
+import { createPipManager } from './features/pip';
+import { createKeyboardManager } from './features/keyboard';
+import { createPersistenceManager } from './features/persistence';
+import { createAutohideManager } from './features/autohide';
+import { createGestureManager } from './features/gestures';
 import { clamp } from './utils/math';
 import type {
   MaskflowPlayer,
@@ -18,8 +25,10 @@ export function createPlayer(
     throw new Error('[maskflow] createPlayer requires a valid HTMLVideoElement.');
   }
 
+  const container = options.container || videoElement.parentElement || videoElement;
   const initialVolume = typeof options.muted === 'boolean' && options.muted ? 0 : 1;
   const initialMuted = Boolean(options.muted);
+  const initialAspectRatio = options.aspectRatio || '16/9';
 
   const store = createStore<PlayerState>({
     status: 'idle',
@@ -35,21 +44,43 @@ export function createPlayer(
     qualities: [] as QualityLevel[],
     captionsEnabled: false,
     controlsVisible: true,
+    aspectRatio: initialAspectRatio,
     error: null,
   });
 
   const events = createEventEmitter<PlayerEvents>();
 
   let isDestroyed = false;
+  let hlsAdapter: HlsAdapter | null = null;
 
-  // Media attachment
-  const detachMedia = attachNativeMedia(videoElement, options, store, events);
+  // Media attachment: check if HLS or standard native source
+  const isHls = isHlsSource(options.src);
+  let detachMedia: () => void;
+
+  if (isHls) {
+    // For HLS, we attach native event listeners with src skipped so hls.js can load it
+    detachMedia = attachNativeMedia(videoElement, { ...options, src: '' }, store, events);
+    // Initialize HLS asynchronously
+    attachHlsMedia(videoElement, options, store, events).then((adapter) => {
+      if (isDestroyed) {
+        adapter?.destroy();
+      } else {
+        hlsAdapter = adapter;
+      }
+    });
+  } else {
+    detachMedia = attachNativeMedia(videoElement, options, store, events);
+  }
+
+  const fullscreenManager = createFullscreenManager(container, videoElement, store, events);
+  const pipManager = createPipManager(videoElement, store, events);
 
   const player: MaskflowPlayer = {
     store,
     events,
     video: videoElement,
     options,
+    container,
 
     getState(): PlayerState {
       return store.getState();
@@ -113,39 +144,21 @@ export function createPlayer(
 
     setQuality(id: string | number | 'auto'): void {
       if (isDestroyed) return;
+      if (hlsAdapter) {
+        hlsAdapter.setQuality(id);
+      }
       store.setState({ quality: id });
       events.emit('qualitychange', id);
     },
 
     async toggleFullscreen(): Promise<void> {
       if (isDestroyed) return;
-      // Basic fallback if called before Phase 2 fullscreen manager
-      if (!document.fullscreenElement) {
-        if (videoElement.requestFullscreen) {
-          await videoElement.requestFullscreen();
-          store.setState({ isFullscreen: true });
-        }
-      } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-          store.setState({ isFullscreen: false });
-        }
-      }
+      await fullscreenManager.toggle();
     },
 
     async togglePip(): Promise<void> {
       if (isDestroyed) return;
-      if (document.pictureInPictureElement) {
-        if (document.exitPictureInPicture) {
-          await document.exitPictureInPicture();
-          store.setState({ isPip: false });
-        }
-      } else {
-        if (videoElement.requestPictureInPicture) {
-          await videoElement.requestPictureInPicture();
-          store.setState({ isPip: true });
-        }
-      }
+      await pipManager.toggle();
     },
 
     toggleCaptions(): void {
@@ -173,17 +186,40 @@ export function createPlayer(
       events.emit('controlschange', visible);
     },
 
+    lockControls(locked: boolean): void {
+      if (isDestroyed) return;
+      autohideManager.lock(locked);
+    },
+
+    setAspectRatio(ratio: string): void {
+      if (isDestroyed) return;
+      store.setState({ aspectRatio: ratio });
+    },
+
     destroy(): void {
       if (isDestroyed) return;
       isDestroyed = true;
 
+      autohideManager.destroy();
+      gestureManager.destroy();
+      keyboardManager.destroy();
+      persistenceManager.destroy();
+      fullscreenManager.destroy();
+      pipManager.destroy();
+      hlsAdapter?.destroy();
       detachMedia();
+
       events.emit('destroy', undefined);
       events.removeAllListeners();
 
       store.setState({ status: 'idle' });
     },
   };
+
+  const keyboardManager = createKeyboardManager(container, player, options.keyboard !== false);
+  const persistenceManager = createPersistenceManager(player, Boolean(options.persist));
+  const autohideManager = createAutohideManager(container, player, options.autoHideDelay ?? 2500);
+  const gestureManager = createGestureManager(container, player, options.gestures !== false);
 
   // Ready callback & event
   if (options.onReady) {

@@ -23,7 +23,19 @@ describe('Player', () => {
     expect(state.duration).toBe(0);
     expect(state.volume).toBe(1);
     expect(state.muted).toBe(false);
+    expect(state.aspectRatio).toBe('16/9');
     expect(video.src).toBe('https://example.com/video.mp4');
+  });
+
+  it('sets and updates aspect ratio', () => {
+    const player = createPlayer(video, {
+      src: 'https://example.com/video.mp4',
+      aspectRatio: '16/9',
+    });
+
+    expect(player.getState().aspectRatio).toBe('16/9');
+    player.setAspectRatio('4/3');
+    expect(player.getState().aspectRatio).toBe('4/3');
   });
 
   it('clamps volume between 0 and 1', () => {
