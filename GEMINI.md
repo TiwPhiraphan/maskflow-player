@@ -335,7 +335,7 @@ Changesets config: `access: public`, `baseBranch: main`, ignore the private play
 - [x] Phase 1 — Core engine
 - [x] Phase 2 — Core features
 - [x] Phase 3 — Design tokens & CSS
-- [ ] Phase 4 — React components
+- [x] Phase 4 — React components
 - [ ] Phase 5 — Quality gates
 - [ ] Phase 6 — Packaging
 - [ ] Phase 7 — CI/CD to npm
