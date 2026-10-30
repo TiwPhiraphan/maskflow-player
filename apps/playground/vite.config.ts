@@ -6,6 +6,10 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      'maskflow/styles.css': path.resolve(
+        __dirname,
+        '../../packages/maskflow/src/styles/maskflow.css',
+      ),
       maskflow: path.resolve(__dirname, '../../packages/maskflow/src/index.ts'),
     },
   },

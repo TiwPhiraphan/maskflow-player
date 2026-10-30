@@ -1,4 +1,6 @@
 import { defineConfig } from 'tsup';
+import fs from 'fs';
+import path from 'path';
 
 export default defineConfig({
   entry: {
@@ -15,4 +17,11 @@ export default defineConfig({
     };
   },
   external: ['react', 'react-dom', 'vue', 'hls.js'],
+  async onSuccess() {
+    const srcCss = path.resolve(__dirname, 'src/styles/maskflow.css');
+    const distCss = path.resolve(__dirname, 'dist/styles.css');
+    if (fs.existsSync(srcCss)) {
+      fs.copyFileSync(srcCss, distCss);
+    }
+  },
 });
