@@ -20,7 +20,12 @@ function App() {
     <div className={`demo-page theme-${theme}`}>
       <div className="demo-container">
         <header className="demo-header">
-          <h1 className="demo-title">🔮 Maskflow Video Player</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h1 className="demo-title">🔮 Maskflow Video Player (React)</h1>
+            <a href="/vue.html" className="demo-btn" style={{ textDecoration: 'none' }}>
+              Switch to Vue 3 Playground →
+            </a>
+          </div>
           <p className="demo-desc">
             Futuristic glassmorphism video player for React & Vue — Mobile-first, WCAG AA
             accessible.

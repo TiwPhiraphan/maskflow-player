@@ -11,6 +11,7 @@ export default defineConfig({
         '../../packages/maskflow/src/styles/maskflow.css',
       ),
       'maskflow/react': path.resolve(__dirname, '../../packages/maskflow/src/react/index.ts'),
+      'maskflow/vue': path.resolve(__dirname, '../../packages/maskflow/src/vue/index.ts'),
       maskflow: path.resolve(__dirname, '../../packages/maskflow/src/index.ts'),
     },
   },

@@ -11,7 +11,8 @@
   "dependencies": {
     "maskflow": "workspace:*",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "vue": "^3.5.44"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",
