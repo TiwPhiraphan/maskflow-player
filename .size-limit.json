@@ -1,0 +1,14 @@
+[
+  {
+    "name": "maskflow (core)",
+    "path": "packages/maskflow/dist/index.js",
+    "ignore": ["hls.js"],
+    "limit": "12 kB"
+  },
+  {
+    "name": "maskflow/react",
+    "path": "packages/maskflow/dist/react/index.js",
+    "ignore": ["hls.js", "react", "react-dom"],
+    "limit": "25 kB"
+  }
+]
