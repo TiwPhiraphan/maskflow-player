@@ -229,9 +229,12 @@ export const MaskflowPlayer = defineComponent({
       const p = playerInstance.value;
       const s = state.value;
 
+      const isVideoPlaying =
+        s.status === 'playing' || (p?.video && !p.video.paused && !p.video.ended);
+
       const playerClasses = [
         'mf-player',
-        s.status === 'playing' ? 'mf-playing' : '',
+        isVideoPlaying ? 'mf-playing' : '',
         s.isFullscreen ? 'mf-fullscreen' : '',
         !s.controlsVisible ? 'mf-controls-hidden' : '',
         props.class,
@@ -257,8 +260,9 @@ export const MaskflowPlayer = defineComponent({
       // Render Progress Bar
       const renderProgressBar = (): VNode | null => {
         if (!hasControl('progress') || !p) return null;
-        const progressPercent = s.duration > 0 ? (s.currentTime / s.duration) * 100 : 0;
-        const bufferedPercent = s.duration > 0 ? (s.buffered / s.duration) * 100 : 0;
+        const duration = s.duration > 0 ? s.duration : 0;
+        const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (s.currentTime / duration) * 100)) : 0;
+        const bufferedPercent = Math.min(100, Math.max(0, s.buffered * 100));
 
         return h(
           'div',
@@ -268,14 +272,14 @@ export const MaskflowPlayer = defineComponent({
             tabIndex: 0,
             'aria-label': 'Seek progress',
             'aria-valuemin': 0,
-            'aria-valuemax': Math.round(s.duration),
+            'aria-valuemax': Math.round(duration),
             'aria-valuenow': Math.round(s.currentTime),
-            'aria-valuetext': `${formatTime(s.currentTime)} of ${formatTime(s.duration)}`,
+            'aria-valuetext': `${formatTime(s.currentTime)} of ${formatTime(duration)}`,
             onClick: (e: MouseEvent) => {
               const target = e.currentTarget as HTMLElement;
               const rect = target.getBoundingClientRect();
               const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-              p.seek(ratio * s.duration);
+              p.seek(ratio * duration);
             },
             onKeydown: (e: KeyboardEvent) => {
               if (e.key === 'ArrowRight') {
@@ -288,18 +292,20 @@ export const MaskflowPlayer = defineComponent({
             },
           },
           [
-            h('div', {
-              className: 'mf-progress-buffered',
-              style: { width: `${bufferedPercent}%` },
-            }),
-            h(
-              'div',
-              {
-                className: 'mf-progress-fill',
+            h('div', { className: 'mf-progress-rail' }, [
+              h('div', {
+                className: 'mf-progress-buffered',
+                style: { width: `${bufferedPercent}%` },
+              }),
+              h('div', {
+                className: 'mf-progress-played',
                 style: { width: `${progressPercent}%` },
-              },
-              [h('div', { className: 'mf-progress-thumb' })],
-            ),
+              }),
+              h('div', {
+                className: 'mf-progress-thumb',
+                style: { left: `${progressPercent}%` },
+              }),
+            ]),
           ],
         );
       };
@@ -461,7 +467,7 @@ export const MaskflowPlayer = defineComponent({
                   )
                 : null,
               hasControl('volume')
-                ? h('div', { className: 'mf-volume-group' }, [
+                ? h('div', { className: 'mf-volume-container' }, [
                     h(
                       'button',
                       {
@@ -472,19 +478,33 @@ export const MaskflowPlayer = defineComponent({
                       },
                       [s.muted || s.volume === 0 ? VolumeMutedIcon() : VolumeHighIcon()],
                     ),
-                    h('input', {
-                      type: 'range',
-                      min: 0,
-                      max: 1,
-                      step: 0.05,
-                      value: s.muted ? 0 : s.volume,
-                      className: 'mf-volume-slider',
-                      'aria-label': 'Volume',
-                      onInput: (e: Event) => {
-                        const target = e.target as HTMLInputElement;
-                        p.setVolume(parseFloat(target.value));
+                    h(
+                      'div',
+                      {
+                        className: 'mf-volume-slider',
+                        role: 'slider',
+                        tabIndex: 0,
+                        'aria-label': 'Volume',
+                        'aria-valuemin': 0,
+                        'aria-valuemax': 100,
+                        'aria-valuenow': Math.round((s.muted ? 0 : s.volume) * 100),
+                        'aria-valuetext': `${Math.round((s.muted ? 0 : s.volume) * 100)}%`,
+                        onClick: (e: MouseEvent) => {
+                          const target = e.currentTarget as HTMLElement;
+                          const rect = target.getBoundingClientRect();
+                          const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                          p.setVolume(ratio);
+                        },
                       },
-                    }),
+                      [
+                        h('div', { className: 'mf-volume-rail' }, [
+                          h('div', {
+                            className: 'mf-volume-fill',
+                            style: { width: `${(s.muted ? 0 : s.volume) * 100}%` },
+                          }),
+                        ]),
+                      ],
+                    ),
                   ])
                 : null,
               hasControl('time')
@@ -578,14 +598,14 @@ export const MaskflowPlayer = defineComponent({
             : null,
 
           // Big play button
-          p && s.status !== 'playing' && s.status !== 'error'
+          p && !isVideoPlaying && s.status !== 'error'
             ? h(
                 'button',
                 {
                   type: 'button',
                   className: 'mf-big-play',
-                  'aria-label': 'Play video',
-                  onClick: () => p.play(),
+                  'aria-label': s.status === 'ended' ? 'Replay' : 'Play video',
+                  onClick: () => p.toggle(),
                 },
                 [PlayIcon()],
               )

@@ -28,10 +28,10 @@ export function createGestureManager(
   }
 
   function isInteractiveElement(target: EventTarget | null): boolean {
-    if (!target || !(target instanceof HTMLElement)) return false;
+    if (!target || !(target instanceof Element)) return false;
     return Boolean(
       target.closest(
-        'button, input, select, textarea, [role="button"], [role="slider"], [role="menu"], [role="menuitem"]',
+        'button, input, select, textarea, [role="button"], [role="slider"], [role="menu"], [role="menuitem"], .mf-controls, .mf-menu',
       ),
     );
   }

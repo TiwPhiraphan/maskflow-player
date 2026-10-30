@@ -91,9 +91,13 @@ export function attachNativeMedia(
   };
 
   const handleCanPlay = () => {
-    const currentState = store.getState().status;
-    if (currentState === 'loading' || currentState === 'idle' || currentState === 'buffering') {
-      store.setState({ status: 'ready' });
+    if (!video.paused && !video.ended) {
+      store.setState({ status: 'playing' });
+    } else {
+      const currentState = store.getState().status;
+      if (currentState === 'loading' || currentState === 'idle' || currentState === 'buffering') {
+        store.setState({ status: 'ready' });
+      }
     }
     events.emit('canplay', undefined);
   };
@@ -120,12 +124,17 @@ export function attachNativeMedia(
     const duration = Number.isFinite(video.duration) ? video.duration : 0;
     const buffered = calculateBuffered(video);
 
-    store.setState({
+    const update: Partial<PlayerState> = {
       currentTime,
       duration: duration || store.getState().duration,
       buffered,
-    });
+    };
 
+    if (!video.paused && !video.ended && store.getState().status !== 'playing') {
+      update.status = 'playing';
+    }
+
+    store.setState(update);
     events.emit('timeupdate', { currentTime, duration });
   };
 

@@ -121,7 +121,7 @@ const App = defineComponent({
           h(
             'div',
             {
-              className: 'demo-player-box',
+              className: 'demo-player-wrapper',
               style: { aspectRatio: aspectRatio.value.replace('/', ' / ') },
             },
             [

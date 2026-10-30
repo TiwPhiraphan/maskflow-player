@@ -1,46 +1,38 @@
 /**
- * maskflow.css — Futuristic Glassmorphism Video Player Stylesheet
+ * maskflow.css — YouTube-Style Modern Video Player Stylesheet
  */
 
 :root {
-  --mf-accent: linear-gradient(135deg, #8b5cf6, #06b6d4);
-  --mf-accent-solid: #8b5cf6;
-  --mf-accent-glow: rgba(139, 92, 246, 0.45);
-  --mf-bg-glass: rgba(20, 20, 30, 0.48);
-  --mf-bg-glass-fallback: rgba(20, 20, 30, 0.88);
-  --mf-backdrop-filter: blur(18px) saturate(160%);
-  --mf-border-glass: 1px solid rgba(255, 255, 255, 0.12);
-  --mf-border-glass-hover: 1px solid rgba(255, 255, 255, 0.22);
-  --mf-shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  --mf-accent: #ff0000;
+  --mf-accent-solid: #ff0000;
+  --mf-accent-glow: rgba(255, 0, 0, 0.45);
+  --mf-bg-scrim: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.45) 50%,
+    rgba(0, 0, 0, 0.15) 80%,
+    transparent 100%
+  );
+  --mf-bg-scrim-top: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  --mf-bg-panel: rgba(28, 28, 28, 0.96);
   --mf-text: #ffffff;
-  --mf-text-muted: rgba(255, 255, 255, 0.7);
+  --mf-text-muted: #aaaaaa;
   --mf-radius-pill: 9999px;
-  --mf-radius-panel: 16px;
-  --mf-radius-sm: 8px;
+  --mf-radius-panel: 12px;
+  --mf-radius-sm: 4px;
   --mf-aspect-ratio: 16 / 9;
-  --mf-control-inset: 14px;
-  --mf-transition: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  --mf-transition: 150ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 [data-theme='light'] {
-  --mf-bg-glass: rgba(255, 255, 255, 0.55);
-  --mf-bg-glass-fallback: rgba(240, 242, 248, 0.94);
-  --mf-border-glass: 1px solid rgba(0, 0, 0, 0.1);
-  --mf-border-glass-hover: 1px solid rgba(0, 0, 0, 0.18);
-  --mf-shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
-  --mf-text: #0f172a;
-  --mf-text-muted: rgba(15, 23, 42, 0.7);
+  --mf-text: #ffffff;
+  --mf-text-muted: #cccccc;
 }
 
 @media (prefers-color-scheme: light) {
   [data-theme='auto'] {
-    --mf-bg-glass: rgba(255, 255, 255, 0.55);
-    --mf-bg-glass-fallback: rgba(240, 242, 248, 0.94);
-    --mf-border-glass: 1px solid rgba(0, 0, 0, 0.1);
-    --mf-border-glass-hover: 1px solid rgba(0, 0, 0, 0.18);
-    --mf-shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
-    --mf-text: #0f172a;
-    --mf-text-muted: rgba(15, 23, 42, 0.7);
+    --mf-text: #ffffff;
+    --mf-text-muted: #cccccc;
   }
 }
 
@@ -58,13 +50,15 @@
   width: 100%;
   aspect-ratio: var(--mf-aspect-ratio, 16 / 9);
   background: #000000;
-  border-radius: var(--mf-radius-panel, 16px);
+  border-radius: var(--mf-radius-panel, 12px);
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
   outline: none;
   color: var(--mf-text);
   box-sizing: border-box;
+  font-family: 'YouTube Noto', Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial,
+    sans-serif;
 }
 
 .mf-player *,
@@ -95,23 +89,14 @@
   display: block;
 }
 
-/* Glass Surface Utility */
+/* Glass surface fallback / legacy class (transparent overlay) */
 .mf-glass {
-  background: var(--mf-bg-glass);
-  backdrop-filter: var(--mf-backdrop-filter);
-  -webkit-backdrop-filter: var(--mf-backdrop-filter);
-  border: var(--mf-border-glass);
-  box-shadow: var(--mf-shadow-glass);
-}
-
-@supports not (backdrop-filter: blur(10px)) {
-  .mf-glass {
-    background: var(--mf-bg-glass-fallback);
-  }
+  border: none;
+  box-shadow: none;
 }
 
 /* ==========================================================================
-   Center Big Play / Pause Button
+   Center Big Play / Pause Button (YouTube Style)
    ========================================================================== */
 
 .mf-big-play {
@@ -121,17 +106,17 @@
   transform: translate(-50%, -50%) scale(1);
   width: 68px;
   height: 68px;
-  border-radius: var(--mf-radius-pill);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 4;
-  border: var(--mf-border-glass);
-  background: var(--mf-bg-glass);
-  backdrop-filter: var(--mf-backdrop-filter);
-  -webkit-backdrop-filter: var(--mf-backdrop-filter);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: none;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   transition:
     transform var(--mf-transition),
     background var(--mf-transition),
@@ -141,8 +126,7 @@
 
 .mf-big-play:hover {
   transform: translate(-50%, -50%) scale(1.1);
-  background: rgba(139, 92, 246, 0.3);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--mf-accent-solid, #ff0000);
   box-shadow: 0 0 24px var(--mf-accent-glow);
 }
 
@@ -150,29 +134,38 @@
   width: 32px;
   height: 32px;
   fill: currentColor;
+  margin-left: 3px;
 }
 
+/* Crucial: Completely hide Big Play Button whenever player is playing */
 .mf-playing .mf-big-play {
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -50%) scale(0.85);
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 
 /* ==========================================================================
-   Floating Glass Control Bar
+   Bottom Controls Bar (YouTube Scrim Overlay)
    ========================================================================== */
 
 .mf-controls {
   position: absolute;
-  bottom: var(--mf-control-inset, 14px);
-  left: var(--mf-control-inset, 14px);
-  right: var(--mf-control-inset, 14px);
-  padding: 10px 14px;
-  border-radius: var(--mf-radius-panel, 16px);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  padding: 0 14px 6px 14px;
+  border-radius: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
+  background: var(--mf-bg-scrim);
   z-index: 10;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   transition:
     opacity var(--mf-transition),
     transform var(--mf-transition);
@@ -181,42 +174,43 @@
 .mf-controls-hidden .mf-controls {
   opacity: 0;
   pointer-events: none;
-  transform: translateY(12px);
+  transform: translateY(6px);
 }
 
 .mf-controls-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  height: 40px;
 }
 
 .mf-controls-left,
 .mf-controls-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 /* ==========================================================================
-   Progress Bar
+   Progress Bar (YouTube Scrub Bar)
    ========================================================================== */
 
 .mf-progress {
   position: relative;
   width: 100%;
-  height: 20px;
+  height: 18px;
   display: flex;
   align-items: center;
   cursor: pointer;
   touch-action: none;
+  margin-bottom: 2px;
 }
 
 .mf-progress-rail {
   position: relative;
   width: 100%;
-  height: 4px;
-  border-radius: var(--mf-radius-pill);
+  height: 3px;
+  border-radius: 2px;
   background: rgba(255, 255, 255, 0.2);
   overflow: visible;
   transition: height var(--mf-transition);
@@ -224,7 +218,7 @@
 
 .mf-progress:hover .mf-progress-rail,
 .mf-progress.mf-dragging .mf-progress-rail {
-  height: 7px;
+  height: 5px;
 }
 
 .mf-progress-buffered {
@@ -232,8 +226,8 @@
   top: 0;
   left: 0;
   height: 100%;
-  border-radius: var(--mf-radius-pill);
-  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.4);
   pointer-events: none;
 }
 
@@ -242,9 +236,8 @@
   top: 0;
   left: 0;
   height: 100%;
-  border-radius: var(--mf-radius-pill);
-  background: var(--mf-accent);
-  box-shadow: 0 0 10px var(--mf-accent-glow);
+  border-radius: 2px;
+  background: var(--mf-accent-solid, #ff0000);
   pointer-events: none;
 }
 
@@ -252,11 +245,11 @@
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%) scale(0);
-  width: 14px;
-  height: 14px;
-  border-radius: var(--mf-radius-pill);
-  background: #ffffff;
-  box-shadow: 0 0 8px var(--mf-accent-glow);
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--mf-accent-solid, #ff0000);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   transition: transform var(--mf-transition);
 }
@@ -269,19 +262,20 @@
 /* Hover Tooltip */
 .mf-tooltip {
   position: absolute;
-  bottom: 28px;
+  bottom: 26px;
   transform: translateX(-50%);
-  padding: 4px 8px;
+  padding: 3px 8px;
   font-size: 0.75rem;
   font-weight: 500;
-  border-radius: var(--mf-radius-sm);
-  background: rgba(15, 17, 26, 0.85);
+  border-radius: var(--mf-radius-sm, 4px);
+  background: rgba(28, 28, 28, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: var(--mf-border-glass);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
   pointer-events: none;
   white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 /* ==========================================================================
@@ -292,12 +286,12 @@
   background: transparent;
   border: none;
   color: var(--mf-text);
-  min-width: 44px;
-  min-height: 44px;
-  width: 44px;
-  height: 44px;
+  min-width: 40px;
+  min-height: 40px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  border-radius: var(--mf-radius-sm);
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -309,27 +303,29 @@
 }
 
 .mf-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
 }
 
 .mf-btn:active {
-  transform: scale(0.94);
+  transform: scale(0.92);
 }
 
 .mf-btn:focus-visible {
-  outline: 2px solid var(--mf-accent-solid);
+  outline: 2px solid var(--mf-accent-solid, #ff0000);
   outline-offset: 2px;
 }
 
 .mf-btn svg {
   width: 22px;
   height: 22px;
-  fill: currentColor;
+  display: block;
+  /* Preserves inline SVG stroke and fill */
 }
 
-.mf-btn[aria-pressed='true'] {
-  color: #38bdf8;
+.mf-btn[aria-pressed='true'],
+.mf-btn.mf-active {
+  color: var(--mf-accent-solid, #ff0000);
 }
 
 /* Time Display */
@@ -338,40 +334,61 @@
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   color: var(--mf-text);
-  padding: 0 6px;
+  padding: 0 8px;
   white-space: nowrap;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 
 .mf-time-separator {
   color: var(--mf-text-muted);
-  margin: 0 3px;
+  margin: 0 4px;
 }
 
 /* ==========================================================================
-   Volume Slider
+   Volume Slider (YouTube Hover Slide-out)
    ========================================================================== */
 
 .mf-volume-container {
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .mf-volume-slider {
-  width: 60px;
-  height: 20px;
+  width: 0;
+  opacity: 0;
+  height: 36px;
   display: flex;
   align-items: center;
   cursor: pointer;
-  margin-left: 2px;
+  margin-left: 0;
   touch-action: none;
+  overflow: hidden;
+  transition:
+    width var(--mf-transition),
+    opacity var(--mf-transition),
+    margin-left var(--mf-transition),
+    margin-right var(--mf-transition);
+}
+
+.mf-volume-container:hover .mf-volume-slider,
+.mf-volume-container:focus-within .mf-volume-slider,
+.mf-volume-slider:focus,
+.mf-volume-slider:focus-visible {
+  width: 56px;
+  opacity: 1;
+  margin-left: 4px;
+  margin-right: 6px;
 }
 
 .mf-volume-rail {
   position: relative;
   width: 100%;
-  height: 4px;
-  border-radius: var(--mf-radius-pill);
-  background: rgba(255, 255, 255, 0.2);
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .mf-volume-fill {
@@ -379,8 +396,8 @@
   top: 0;
   left: 0;
   height: 100%;
-  border-radius: var(--mf-radius-pill);
-  background: var(--mf-accent);
+  border-radius: 2px;
+  background: #ffffff;
 }
 
 /* ==========================================================================
@@ -394,18 +411,23 @@
 
 .mf-menu {
   position: absolute;
-  bottom: 60px;
+  bottom: 52px;
   right: 0;
-  min-width: 190px;
-  border-radius: var(--mf-radius-panel);
-  padding: 8px;
+  min-width: 210px;
+  border-radius: 8px;
+  padding: 8px 0;
+  background: var(--mf-bg-panel, rgba(28, 28, 28, 0.96));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   z-index: 20;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(10px) scale(0.97);
+  transform: translateY(8px) scale(0.98);
   transition:
     opacity var(--mf-transition),
     transform var(--mf-transition);
@@ -421,13 +443,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-radius: var(--mf-radius-sm);
+  padding: 8px 16px;
   background: transparent;
   border: none;
   color: var(--mf-text);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   text-align: left;
   width: 100%;
@@ -441,18 +462,20 @@
 }
 
 .mf-menu-item[aria-checked='true'] {
-  color: #38bdf8;
+  color: var(--mf-accent-solid, #ff0000);
+  font-weight: 600;
 }
 
 .mf-menu-item-value {
-  opacity: 0.7;
+  color: var(--mf-text-muted);
   font-size: 0.8rem;
 }
 
 .mf-menu-item-back {
-  font-weight: 700;
+  font-weight: 600;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 4px;
+  padding-bottom: 10px;
 }
 
 /* ==========================================================================
@@ -471,7 +494,7 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity 150ms ease-out;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, transparent 70%);
   z-index: 5;
 }
 
@@ -488,7 +511,7 @@
 }
 
 .mf-seek-flash-icon {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: #ffffff;
 }
@@ -504,9 +527,9 @@
   transform: translate(-50%, -50%);
   width: 52px;
   height: 52px;
-  border-radius: var(--mf-radius-pill);
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  border-top-color: #38bdf8;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--mf-accent-solid, #ff0000);
   animation: mf-spin 0.8s linear infinite;
   pointer-events: none;
   z-index: 6;
@@ -521,8 +544,9 @@
 .mf-error-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(10, 10, 18, 0.85);
+  background: rgba(10, 10, 15, 0.88);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -542,8 +566,10 @@
 .mf-error-retry {
   width: auto !important;
   padding: 8px 18px !important;
-  border-radius: var(--mf-radius-sm) !important;
+  border-radius: var(--mf-radius-sm, 4px) !important;
   font-weight: 600 !important;
+  background: var(--mf-accent-solid, #ff0000) !important;
+  color: #ffffff !important;
 }
 
 /* ==========================================================================
@@ -551,40 +577,39 @@
    ========================================================================== */
 
 @container mf-player (max-width: 480px) {
-  .mf-volume-slider {
+  .mf-volume-container {
     display: none;
   }
 
   .mf-time {
     font-size: 0.75rem;
+    padding: 0 4px;
   }
 
   .mf-controls {
-    bottom: 8px;
-    left: 8px;
-    right: 8px;
-    padding: 8px 10px;
-    gap: 4px;
+    padding: 0 8px 4px 8px;
+  }
+
+  .mf-btn {
+    min-width: 36px;
+    min-height: 36px;
+    width: 36px;
+    height: 36px;
   }
 
   /* Bottom sheet style for settings menu on compact screens */
-  .mf-settings-container {
-    position: relative;
-    display: inline-flex;
-  }
-
   .mf-menu {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
-    border-radius: 20px 20px 0 0;
-    padding: 16px;
-    background: rgba(18, 20, 32, 0.95);
+    border-radius: 16px 16px 0 0;
+    padding: 16px 8px;
+    background: rgba(28, 28, 28, 0.98);
     border: none;
-    border-top: var(--mf-border-glass);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.8);
     transform: translateY(100%);
   }
 

@@ -8,7 +8,10 @@ export interface BigPlayButtonProps {
 }
 
 export const BigPlayButton: React.FC<BigPlayButtonProps> = ({ player, state }) => {
-  if (state.status === 'playing') {
+  if (
+    state.status === 'playing' ||
+    (player.video && !player.video.paused && !player.video.ended)
+  ) {
     return null;
   }
 

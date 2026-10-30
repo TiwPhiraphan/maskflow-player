@@ -106,9 +106,12 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
       : {}),
   };
 
+  const isVideoPlaying =
+    state.status === 'playing' || (player?.video && !player.video.paused && !player.video.ended);
+
   const containerClasses = [
     'mf-player',
-    state.status === 'playing' ? 'mf-playing' : '',
+    isVideoPlaying ? 'mf-playing' : '',
     state.isFullscreen ? 'mf-fullscreen' : '',
     !state.controlsVisible ? 'mf-controls-hidden' : '',
     className,
