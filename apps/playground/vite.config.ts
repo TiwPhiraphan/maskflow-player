@@ -10,6 +10,7 @@ export default defineConfig({
         __dirname,
         '../../packages/maskflow/src/styles/maskflow.css',
       ),
+      'maskflow/react': path.resolve(__dirname, '../../packages/maskflow/src/react/index.ts'),
       maskflow: path.resolve(__dirname, '../../packages/maskflow/src/index.ts'),
     },
   },
