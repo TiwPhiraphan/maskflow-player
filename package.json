@@ -15,7 +15,8 @@
     "size": "size-limit",
     "check:pkg": "publint packages/maskflow && attw --pack packages/maskflow --entrypoints . ./react ./vue",
     "changeset": "changeset",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "publish:npm": "pnpm build && pnpm --filter maskflow publish --provenance --access=public --no-git-checks"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

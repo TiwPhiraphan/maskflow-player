@@ -79,7 +79,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "publish:npm": "pnpm publish --provenance --access=public --no-git-checks"
   },
   "peerDependencies": {
     "hls.js": "^1",
