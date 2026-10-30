@@ -331,8 +331,8 @@ Changesets config: `access: public`, `baseBranch: main`, ignore the private play
 
 ## 7. Progress checklist
 
-- [ ] Phase 0 — Name check & scaffold
-- [ ] Phase 1 — Core engine
+- [x] Phase 0 — Name check & scaffold
+- [x] Phase 1 — Core engine
 - [ ] Phase 2 — Core features
 - [ ] Phase 3 — Design tokens & CSS
 - [ ] Phase 4 — React components
