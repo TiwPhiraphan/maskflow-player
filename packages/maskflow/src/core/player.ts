@@ -207,6 +207,7 @@ export function createPlayer(
       fullscreenManager.destroy();
       pipManager.destroy();
       hlsAdapter?.destroy();
+      container.removeEventListener('focusin', handleButtonFocus);
       detachMedia();
 
       events.emit('destroy', undefined);
@@ -220,6 +221,15 @@ export function createPlayer(
   const persistenceManager = createPersistenceManager(player, Boolean(options.persist));
   const autohideManager = createAutohideManager(container, player, options.autoHideDelay ?? 2500);
   const gestureManager = createGestureManager(container, player, options.gestures !== false);
+
+  const handleButtonFocus = (e: FocusEvent) => {
+    const target = e.target as Element | null;
+    if (target?.matches?.('button.mf-btn, button.mf-big-play')) {
+      (target as HTMLElement).blur();
+    }
+  };
+
+  container.addEventListener('focusin', handleButtonFocus);
 
   // Ready callback & event
   if (options.onReady) {

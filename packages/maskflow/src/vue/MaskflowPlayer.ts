@@ -258,6 +258,8 @@ export const MaskflowPlayer = defineComponent({
       destroy: () => playerInstance.value?.destroy(),
     });
 
+    const blurTarget = (e: FocusEvent) => (e.currentTarget as HTMLElement | null)?.blur();
+
     return () => {
       const p = playerInstance.value;
       const s = state.value;
@@ -359,6 +361,7 @@ export const MaskflowPlayer = defineComponent({
               'aria-haspopup': 'menu',
               'aria-expanded': isMenuOpen.value,
               onClick: toggleSettings,
+              onFocus: blurTarget,
             },
             [SettingsIcon()],
           ),
@@ -495,6 +498,7 @@ export const MaskflowPlayer = defineComponent({
                       className: 'mf-btn',
                       'aria-label': s.status === 'playing' ? 'Pause' : 'Play',
                       onClick: () => p.toggle(),
+                      onFocus: blurTarget,
                     },
                     [s.status === 'playing' ? PauseIcon() : PlayIcon()],
                   )
@@ -508,6 +512,7 @@ export const MaskflowPlayer = defineComponent({
                         className: 'mf-btn',
                         'aria-label': s.muted || s.volume === 0 ? 'Unmute' : 'Mute',
                         onClick: () => p.toggleMute(),
+                        onFocus: blurTarget,
                       },
                       [s.muted || s.volume === 0 ? VolumeMutedIcon() : VolumeHighIcon()],
                     ),
@@ -567,6 +572,7 @@ export const MaskflowPlayer = defineComponent({
                       'aria-label': 'Captions',
                       'aria-pressed': s.captionsEnabled,
                       onClick: () => p.toggleCaptions(),
+                      onFocus: blurTarget,
                     },
                     [CaptionsIcon()],
                   )
@@ -580,6 +586,7 @@ export const MaskflowPlayer = defineComponent({
                       className: 'mf-btn',
                       'aria-label': 'Picture in Picture',
                       onClick: () => p.togglePip(),
+                      onFocus: blurTarget,
                     },
                     [PipIcon()],
                   )
@@ -593,6 +600,7 @@ export const MaskflowPlayer = defineComponent({
                       'aria-label': s.isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen',
                       'aria-pressed': s.isFullscreen,
                       onClick: () => p.toggleFullscreen(),
+                      onFocus: blurTarget,
                     },
                     [s.isFullscreen ? FullscreenExitIcon() : FullscreenEnterIcon()],
                   )
@@ -639,6 +647,7 @@ export const MaskflowPlayer = defineComponent({
                   className: 'mf-big-play',
                   'aria-label': s.status === 'ended' ? 'Replay' : 'Play video',
                   onClick: () => p.toggle(),
+                  onFocus: blurTarget,
                 },
                 [PlayIcon()],
               )

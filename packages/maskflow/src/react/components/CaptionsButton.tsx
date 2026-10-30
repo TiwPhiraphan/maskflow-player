@@ -15,6 +15,7 @@ export const CaptionsButton: React.FC<CaptionsButtonProps> = ({ player, state })
       aria-label="Captions"
       aria-pressed={state.captionsEnabled}
       onClick={() => player.toggleCaptions()}
+      onFocus={(e) => e.currentTarget.blur()}
     >
       <CaptionsIcon />
     </button>

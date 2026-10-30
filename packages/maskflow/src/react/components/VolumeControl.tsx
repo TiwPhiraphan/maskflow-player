@@ -67,6 +67,7 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({ player, state }) =
         aria-label={isMuted ? 'Unmute' : 'Mute'}
         aria-pressed={isMuted}
         onClick={() => player.toggleMute()}
+        onFocus={(e) => e.currentTarget.blur()}
       >
         {isMuted ? <VolumeMutedIcon /> : <VolumeHighIcon />}
       </button>

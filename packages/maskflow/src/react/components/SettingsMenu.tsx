@@ -9,7 +9,7 @@ export interface SettingsMenuProps {
 
 type MenuView = 'main' | 'speed' | 'quality';
 
-const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -82,6 +82,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={toggleMenu}
+        onFocus={(e) => e.currentTarget.blur()}
       >
         <SettingsIcon />
       </button>
