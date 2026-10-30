@@ -340,4 +340,4 @@ Changesets config: `access: public`, `baseBranch: main`, ignore the private play
 - [x] Phase 6 — Packaging
 - [x] Phase 7 — CI/CD to npm
 - [x] Phase 8 — Vue adapter
-- [ ] Phase 9 — Docs
+- [x] Phase 9 — Docs

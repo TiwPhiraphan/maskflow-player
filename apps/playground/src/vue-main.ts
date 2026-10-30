@@ -1,5 +1,5 @@
 import { createApp, defineComponent, ref, h } from 'vue';
-import { MaskflowPlayer } from 'maskflow/vue';
+import { MaskflowPlayer, type MaskflowVueInstance } from 'maskflow/vue';
 import 'maskflow/styles.css';
 import './main.css';
 
@@ -12,7 +12,7 @@ const App = defineComponent({
     const theme = ref<'dark' | 'light' | 'auto'>('dark');
     const accent = ref('#8b5cf6');
     const aspectRatio = ref('16/9');
-    const playerRef = ref<InstanceType<typeof MaskflowPlayer> | null>(null);
+    const playerRef = ref<MaskflowVueInstance | null>(null);
 
     return () =>
       h('div', { className: `demo-page theme-${theme.value}` }, [
