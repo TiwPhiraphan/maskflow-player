@@ -3,10 +3,32 @@ import { MaskflowPlayer, type MaskflowVueInstance } from 'maskflow/vue';
 import 'maskflow/styles.css';
 import './main.css';
 
+const MULTI_QUALITY_SOURCES = [
+  {
+    src: 'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF',
+    quality: '1080p',
+    label: '1080p HD',
+    height: 1080,
+  },
+  {
+    src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    quality: '720p',
+    label: '720p',
+    height: 720,
+  },
+  {
+    src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    quality: '480p',
+    label: '480p',
+    height: 480,
+  },
+];
+
 const App = defineComponent({
   name: 'VuePlaygroundApp',
   setup() {
-    const videoSrc = ref(
+    const sourceKey = ref<'user' | 'multi' | 'hls' | 'tears' | 'blazes'>('user');
+    const videoSrc = ref<string | typeof MULTI_QUALITY_SOURCES>(
       'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF',
     );
     const theme = ref<'dark' | 'light' | 'auto'>('dark');
@@ -36,13 +58,9 @@ const App = defineComponent({
                 'button',
                 {
                   type: 'button',
-                  className: `demo-btn ${
-                    videoSrc.value ===
-                    'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF'
-                      ? 'active'
-                      : ''
-                  }`,
+                  className: `demo-btn ${sourceKey.value === 'user' ? 'active' : ''}`,
                   onClick: () => {
+                    sourceKey.value = 'user';
                     videoSrc.value =
                       'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF';
                   },
@@ -53,16 +71,51 @@ const App = defineComponent({
                 'button',
                 {
                   type: 'button',
-                  className: `demo-btn ${
-                    videoSrc.value === 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
-                      ? 'active'
-                      : ''
-                  }`,
+                  className: `demo-btn ${sourceKey.value === 'multi' ? 'active' : ''}`,
                   onClick: () => {
+                    sourceKey.value = 'multi';
+                    videoSrc.value = MULTI_QUALITY_SOURCES;
+                  },
+                },
+                'Multi-Quality (1080p/720p/480p)',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: `demo-btn ${sourceKey.value === 'hls' ? 'active' : ''}`,
+                  onClick: () => {
+                    sourceKey.value = 'hls';
                     videoSrc.value = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
                   },
                 },
                 'Mux HLS Stream (.m3u8)',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: `demo-btn ${sourceKey.value === 'tears' ? 'active' : ''}`,
+                  onClick: () => {
+                    sourceKey.value = 'tears';
+                    videoSrc.value =
+                      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4';
+                  },
+                },
+                'Tears of Steel',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: `demo-btn ${sourceKey.value === 'blazes' ? 'active' : ''}`,
+                  onClick: () => {
+                    sourceKey.value = 'blazes';
+                    videoSrc.value =
+                      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+                  },
+                },
+                'Bigger Blazes',
               ),
             ]),
 

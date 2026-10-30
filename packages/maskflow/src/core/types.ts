@@ -62,6 +62,9 @@ export interface PlayerEvents {
 export interface MediaSourceItem {
   src: string;
   type?: string | undefined;
+  quality?: string | number | undefined;
+  label?: string | undefined;
+  height?: number | undefined;
 }
 
 export interface MediaTrackItem {
@@ -89,6 +92,7 @@ export interface PlayerOptions {
   persist?: boolean | undefined;
   autoHideDelay?: number | undefined;
   aspectRatio?: string | undefined; // default "16/9"
+  qualities?: QualityLevel[] | undefined;
   container?: HTMLElement | undefined;
   onReady?: ((player: MaskflowPlayer) => void) | undefined;
   onError?: ((err: unknown) => void) | undefined;

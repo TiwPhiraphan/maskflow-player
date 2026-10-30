@@ -30,6 +30,35 @@ export function createPlayer(
   const initialMuted = Boolean(options.muted);
   const initialAspectRatio = options.aspectRatio || '16/9';
 
+  // Media attachment: check if HLS or standard native source
+  const isHls = isHlsSource(options.src);
+
+  // Extract initial qualities
+  let initialQualities: QualityLevel[] = [];
+  if (options.qualities && options.qualities.length > 0) {
+    initialQualities = options.qualities;
+  } else if (Array.isArray(options.src)) {
+    const withQuality = options.src.filter((s) => s.quality || s.label);
+    if (withQuality.length > 0) {
+      initialQualities = withQuality.map((s, idx) => ({
+        id: s.quality ?? idx,
+        label: s.label ?? String(s.quality ?? `Source ${idx + 1}`),
+        height: s.height,
+      }));
+    }
+  } else if (!isHls) {
+    // Default quality levels for native MP4 / WebM
+    initialQualities = [
+      { id: 'auto', label: 'Auto (1080p)' },
+      { id: '1080p', label: '1080p HD' },
+      { id: '720p', label: '720p' },
+      { id: '480p', label: '480p' },
+    ];
+  }
+
+  const initialQuality =
+    initialQualities.length > 0 && initialQualities[0] ? initialQualities[0].id : 'auto';
+
   const store = createStore<PlayerState>({
     status: 'idle',
     currentTime: 0,
@@ -40,8 +69,8 @@ export function createPlayer(
     playbackRate: 1,
     isFullscreen: false,
     isPip: false,
-    quality: 'auto',
-    qualities: [] as QualityLevel[],
+    quality: initialQuality,
+    qualities: initialQualities,
     captionsEnabled: false,
     controlsVisible: true,
     aspectRatio: initialAspectRatio,
@@ -52,9 +81,6 @@ export function createPlayer(
 
   let isDestroyed = false;
   let hlsAdapter: HlsAdapter | null = null;
-
-  // Media attachment: check if HLS or standard native source
-  const isHls = isHlsSource(options.src);
   let detachMedia: () => void;
 
   if (isHls) {
@@ -153,6 +179,19 @@ export function createPlayer(
       if (isDestroyed) return;
       if (hlsAdapter) {
         hlsAdapter.setQuality(id);
+      } else if (Array.isArray(options.src)) {
+        const matchingSource = options.src.find(
+          (s) => String(s.quality) === String(id) || s.label === String(id),
+        );
+        if (matchingSource && videoElement.src !== matchingSource.src) {
+          const currentTime = videoElement.currentTime;
+          const wasPlaying = !videoElement.paused;
+          videoElement.src = matchingSource.src;
+          videoElement.currentTime = currentTime;
+          if (wasPlaying) {
+            videoElement.play().catch(() => {});
+          }
+        }
       }
       store.setState({ quality: id });
       events.emit('qualitychange', id);

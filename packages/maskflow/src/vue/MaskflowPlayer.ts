@@ -14,6 +14,7 @@ import type {
   MaskflowPlayer as IMaskflowPlayer,
   PlayerOptions,
   DoubleTapEvent,
+  QualityLevel,
 } from '../core/types';
 import { useMaskflow } from './useMaskflow';
 import { formatTime } from '../core/utils/time';
@@ -98,6 +99,10 @@ export const MaskflowPlayer = defineComponent({
     autoHideDelay: {
       type: Number as PropType<number>,
       default: 2500,
+    },
+    qualities: {
+      type: Array as PropType<QualityLevel[]>,
+      default: undefined,
     },
     class: {
       type: String as PropType<string>,
@@ -207,6 +212,7 @@ export const MaskflowPlayer = defineComponent({
         persist: props.persist,
         aspectRatio: props.aspectRatio,
         autoHideDelay: props.autoHideDelay,
+        qualities: props.qualities,
         container: containerEl,
         onReady: (p) => {
           emit('ready', p);

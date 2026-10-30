@@ -6,11 +6,33 @@ import './main.css';
 
 const SOURCES = {
   user: 'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF',
+  multiQuality: [
+    {
+      src: 'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF',
+      quality: '1080p',
+      label: '1080p HD',
+      height: 1080,
+    },
+    {
+      src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      quality: '720p',
+      label: '720p',
+      height: 720,
+    },
+    {
+      src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      quality: '480p',
+      label: '480p',
+      height: 480,
+    },
+  ],
   hls: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+  tears: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+  blazes: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
 };
 
 function App() {
-  const [sourceKey, setSourceKey] = useState<'user' | 'hls'>('user');
+  const [sourceKey, setSourceKey] = useState<keyof typeof SOURCES>('user');
   const [theme, setTheme] = useState<'dark' | 'light' | 'auto'>('dark');
   const [accent, setAccent] = useState<string>('#8b5cf6');
   const [aspectRatio, setAspectRatio] = useState<string>('16/9');
@@ -45,10 +67,31 @@ function App() {
             </button>
             <button
               type="button"
+              className={`demo-btn ${sourceKey === 'multiQuality' ? 'active' : ''}`}
+              onClick={() => setSourceKey('multiQuality')}
+            >
+              Multi-Quality (1080p/720p/480p)
+            </button>
+            <button
+              type="button"
               className={`demo-btn ${sourceKey === 'hls' ? 'active' : ''}`}
               onClick={() => setSourceKey('hls')}
             >
               Mux HLS Stream (.m3u8)
+            </button>
+            <button
+              type="button"
+              className={`demo-btn ${sourceKey === 'tears' ? 'active' : ''}`}
+              onClick={() => setSourceKey('tears')}
+            >
+              Tears of Steel
+            </button>
+            <button
+              type="button"
+              className={`demo-btn ${sourceKey === 'blazes' ? 'active' : ''}`}
+              onClick={() => setSourceKey('blazes')}
+            >
+              Bigger Blazes
             </button>
           </div>
 
