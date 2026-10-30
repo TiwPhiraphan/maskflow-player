@@ -14,6 +14,7 @@ const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<MenuView>('main');
+  const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -28,32 +29,34 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
     });
   };
 
-  const closeMenu = () => {
+  const closeMenu = (restoreFocus = false) => {
     setIsOpen(false);
     setCurrentView('main');
     player.lockControls(false);
-    triggerRef.current?.focus();
+    if (restoreFocus) {
+      triggerRef.current?.focus();
+    }
   };
 
-  // Keyboard navigation & Escape key
+  // Keyboard navigation & Escape key & outside click
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        closeMenu();
+        closeMenu(true);
       }
     };
 
-    const handleOutsideClick = (e: MouseEvent) => {
+    const handleOutsideClick = (e: Event) => {
+      const target = e.target as Node | null;
       if (
-        menuRef.current &&
-        !menuRef.current.contains(e.target as Node) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(e.target as Node)
+        containerRef.current &&
+        target &&
+        !containerRef.current.contains(target)
       ) {
-        closeMenu();
+        closeMenu(false);
       }
     };
 
@@ -70,7 +73,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
   const hasQualities = qualities.length > 0;
 
   return (
-    <div className="mf-settings-container">
+    <div ref={containerRef} className="mf-settings-container">
       <button
         ref={triggerRef}
         type="button"

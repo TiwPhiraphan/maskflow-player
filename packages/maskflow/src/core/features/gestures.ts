@@ -16,6 +16,7 @@ export function createGestureManager(
   let lastTapTime = 0;
   let lastTapX = 0;
   let lastTapY = 0;
+  let isMenuDismissed = false;
 
   const DOUBLE_TAP_MAX_DELAY = 280; // ms
   const DOUBLE_TAP_MAX_DISTANCE = 40; // px
@@ -36,12 +37,23 @@ export function createGestureManager(
     );
   }
 
+  function handlePointerDown(event: PointerEvent): void {
+    if (!event.isPrimary) return;
+    isMenuDismissed = Boolean(targetElement.querySelector('.mf-menu.mf-menu-open'));
+  }
+
   function handlePointerUp(event: PointerEvent): void {
     if (!isEnabled) return;
     if (isInteractiveElement(event.target)) return;
 
     // Only handle primary pointer (mouse left click, touch single point)
     if (!event.isPrimary) return;
+
+    // If pointerdown happened while a menu was open, the tap was meant to dismiss the menu
+    if (isMenuDismissed) {
+      isMenuDismissed = false;
+      return;
+    }
 
     const now = Date.now();
     const x = event.clientX;
@@ -92,6 +104,7 @@ export function createGestureManager(
     }
   }
 
+  targetElement.addEventListener('pointerdown', handlePointerDown);
   targetElement.addEventListener('pointerup', handlePointerUp);
 
   return {
@@ -104,6 +117,7 @@ export function createGestureManager(
     },
     destroy(): void {
       clearTapTimer();
+      targetElement.removeEventListener('pointerdown', handlePointerDown);
       targetElement.removeEventListener('pointerup', handlePointerUp);
     },
   };

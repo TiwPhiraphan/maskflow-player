@@ -117,6 +117,51 @@ export const MaskflowPlayer = defineComponent({
     // Settings menu state
     const isMenuOpen = ref(false);
     const currentMenuView = ref<'main' | 'speed' | 'quality'>('main');
+    const settingsContainerRef = ref<HTMLDivElement | null>(null);
+
+    const closeSettings = () => {
+      isMenuOpen.value = false;
+      currentMenuView.value = 'main';
+      playerInstance.value?.lockControls(false);
+    };
+
+    const toggleSettings = () => {
+      isMenuOpen.value = !isMenuOpen.value;
+      if (!isMenuOpen.value) {
+        currentMenuView.value = 'main';
+      }
+      playerInstance.value?.lockControls(isMenuOpen.value);
+    };
+
+    // Outside click & Escape key to dismiss settings menu
+    const handleOutsideClick = (e: Event) => {
+      if (!isMenuOpen.value) return;
+      const target = e.target as Node | null;
+      if (
+        settingsContainerRef.value &&
+        target &&
+        !settingsContainerRef.value.contains(target)
+      ) {
+        closeSettings();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isMenuOpen.value && e.key === 'Escape') {
+        e.preventDefault();
+        closeSettings();
+      }
+    };
+
+    watch(isMenuOpen, (open) => {
+      if (open) {
+        document.addEventListener('pointerdown', handleOutsideClick);
+        document.addEventListener('keydown', handleKeyDown);
+      } else {
+        document.removeEventListener('pointerdown', handleOutsideClick);
+        document.removeEventListener('keydown', handleKeyDown);
+      }
+    });
 
     // Double tap feedback
     const seekFlash = ref<{
@@ -187,6 +232,8 @@ export const MaskflowPlayer = defineComponent({
     );
 
     onBeforeUnmount(() => {
+      document.removeEventListener('pointerdown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
       if (playerInstance.value) {
         playerInstance.value.destroy();
         playerInstance.value = null;
@@ -210,20 +257,6 @@ export const MaskflowPlayer = defineComponent({
       toggleCaptions: () => playerInstance.value?.toggleCaptions(),
       destroy: () => playerInstance.value?.destroy(),
     });
-
-    const closeSettings = () => {
-      isMenuOpen.value = false;
-      currentMenuView.value = 'main';
-      playerInstance.value?.lockControls(false);
-    };
-
-    const toggleSettings = () => {
-      isMenuOpen.value = !isMenuOpen.value;
-      if (!isMenuOpen.value) {
-        currentMenuView.value = 'main';
-      }
-      playerInstance.value?.lockControls(isMenuOpen.value);
-    };
 
     return () => {
       const p = playerInstance.value;
@@ -316,7 +349,7 @@ export const MaskflowPlayer = defineComponent({
         const qualities = s.qualities;
         const hasQualities = qualities.length > 0;
 
-        return h('div', { className: 'mf-settings-container' }, [
+        return h('div', { ref: settingsContainerRef, className: 'mf-settings-container' }, [
           h(
             'button',
             {
