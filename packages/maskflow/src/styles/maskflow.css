@@ -67,11 +67,28 @@
   box-sizing: border-box;
 }
 
+/* Native Fullscreen (Desktop & Mobile) */
 .mf-player:fullscreen,
-.mf-player.mf-fullscreen {
+.mf-player:-webkit-full-screen,
+.mf-player:-moz-full-screen,
+.mf-player:-ms-fullscreen {
   aspect-ratio: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Fallback simulated fullscreen when native fullscreen API is unavailable */
+.mf-player.mf-fullscreen:not(:fullscreen):not(:-webkit-full-screen) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
+  z-index: 999999 !important;
   max-width: none !important;
   max-height: none !important;
   border-radius: 0 !important;

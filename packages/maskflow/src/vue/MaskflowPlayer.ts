@@ -245,7 +245,7 @@ export const MaskflowPlayer = defineComponent({
       const formattedRatio = (s.aspectRatio || '16/9').replace('/', ' / ');
       const containerStyle: CSSProperties = {
         ...props.style,
-        aspectRatio: formattedRatio,
+        aspectRatio: s.isFullscreen ? 'auto' : formattedRatio,
         ...(props.accent
           ? ({
               '--mf-accent': props.accent,

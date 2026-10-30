@@ -30,6 +30,7 @@ interface WebkitVideoElement extends HTMLVideoElement {
   webkitEnterFullscreen?: () => void;
   webkitExitFullscreen?: () => void;
   webkitSupportsFullscreen?: boolean;
+  webkitDisplayingFullscreen?: boolean;
 }
 
 export function createFullscreenManager(
@@ -53,7 +54,11 @@ export function createFullscreenManager(
       return true;
     }
 
-    return store.getState().isFullscreen;
+    if (typeof webkitVideo.webkitDisplayingFullscreen === 'boolean') {
+      return webkitVideo.webkitDisplayingFullscreen;
+    }
+
+    return false;
   }
 
   function updateState(fullscreen: boolean): void {
@@ -104,6 +109,8 @@ export function createFullscreenManager(
       }
     } catch (err) {
       console.warn('[maskflow] Fullscreen request failed:', err);
+    } finally {
+      updateState(isFullscreen());
     }
   }
 
@@ -124,6 +131,8 @@ export function createFullscreenManager(
       }
     } catch (err) {
       console.warn('[maskflow] Fullscreen exit failed:', err);
+    } finally {
+      updateState(isFullscreen());
     }
   }
 

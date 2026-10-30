@@ -66,6 +66,17 @@ describe('FullscreenManager', () => {
     expect(store.getState().isFullscreen).toBe(true);
     expect(onFsChange).toHaveBeenCalledWith(true);
 
+    // Simulate exiting fullscreen
+    Object.defineProperty(document, 'fullscreenElement', {
+      value: null,
+      configurable: true,
+      writable: true,
+    });
+    document.dispatchEvent(new Event('fullscreenchange'));
+
+    expect(store.getState().isFullscreen).toBe(false);
+    expect(onFsChange).toHaveBeenCalledWith(false);
+
     manager.destroy();
   });
 });

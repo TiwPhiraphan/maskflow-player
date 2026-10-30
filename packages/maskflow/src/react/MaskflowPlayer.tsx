@@ -96,7 +96,11 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
 
   const mergedStyle: React.CSSProperties = {
     ...style,
-    aspectRatio: state.aspectRatio ? state.aspectRatio.replace('/', ' / ') : '16 / 9',
+    aspectRatio: state.isFullscreen
+      ? 'auto'
+      : state.aspectRatio
+        ? state.aspectRatio.replace('/', ' / ')
+        : '16 / 9',
     ...(accent
       ? ({
           '--mf-accent': accent,
