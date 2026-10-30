@@ -77,11 +77,21 @@ export function createGestureManager(
 
       if (widthRatio < 0.35) {
         // Double tap Left: seek -10s
-        player.seekBy(-10);
+        (player as unknown as { _isGestureSeeking?: boolean })._isGestureSeeking = true;
+        try {
+          player.seekBy(-10);
+        } finally {
+          (player as unknown as { _isGestureSeeking?: boolean })._isGestureSeeking = false;
+        }
         player.events.emit('doubletap', { side: 'left', delta: -10 });
       } else if (widthRatio > 0.65) {
         // Double tap Right: seek +10s
-        player.seekBy(10);
+        (player as unknown as { _isGestureSeeking?: boolean })._isGestureSeeking = true;
+        try {
+          player.seekBy(10);
+        } finally {
+          (player as unknown as { _isGestureSeeking?: boolean })._isGestureSeeking = false;
+        }
         player.events.emit('doubletap', { side: 'right', delta: 10 });
       } else {
         // Double tap Center: toggle play/pause

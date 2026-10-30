@@ -163,15 +163,21 @@ export const MaskflowPlayer = defineComponent({
       }
     });
 
-    // Double tap feedback
+    // Double tap feedback state
     const seekFlash = ref<{
       active: boolean;
       side: 'left' | 'right' | 'center';
-      delta?: number | undefined;
+      seconds: number;
     }>({
       active: false,
       side: 'center',
+      seconds: 10,
     });
+    let seekTimer: ReturnType<typeof setTimeout> | null = null;
+    let accumulatedSeconds = 0;
+    let lastSeekSide: 'left' | 'right' | 'center' = 'center';
+
+    const hoverPosition = ref<number | null>(null);
 
     // Reactive store state
     const state = useMaskflow(playerInstance);
@@ -213,10 +219,26 @@ export const MaskflowPlayer = defineComponent({
       playerInstance.value = player;
 
       player.events.on('doubletap', (data: DoubleTapEvent) => {
-        seekFlash.value = { active: true, side: data.side, delta: data.delta };
-        setTimeout(() => {
+        if (data.side === 'center') return;
+        const absDelta = Math.abs(data.delta ?? 10);
+        if (lastSeekSide === data.side && accumulatedSeconds > 0) {
+          accumulatedSeconds += absDelta;
+        } else {
+          accumulatedSeconds = absDelta;
+          lastSeekSide = data.side;
+        }
+
+        seekFlash.value = {
+          active: true,
+          side: data.side,
+          seconds: accumulatedSeconds,
+        };
+
+        if (seekTimer) clearTimeout(seekTimer);
+        seekTimer = setTimeout(() => {
           seekFlash.value = { ...seekFlash.value, active: false };
-        }, 500);
+          accumulatedSeconds = 0;
+        }, 750);
       });
     };
 
@@ -298,6 +320,8 @@ export const MaskflowPlayer = defineComponent({
         const duration = s.duration > 0 ? s.duration : 0;
         const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (s.currentTime / duration) * 100)) : 0;
         const bufferedPercent = Math.min(100, Math.max(0, s.buffered * 100));
+        const hoverTime =
+          hoverPosition.value !== null && duration > 0 ? hoverPosition.value * duration : 0;
 
         return h(
           'div',
@@ -310,6 +334,16 @@ export const MaskflowPlayer = defineComponent({
             'aria-valuemax': Math.round(duration),
             'aria-valuenow': Math.round(s.currentTime),
             'aria-valuetext': `${formatTime(s.currentTime)} of ${formatTime(duration)}`,
+            onPointermove: (e: PointerEvent) => {
+              const target = e.currentTarget as HTMLElement;
+              const rect = target.getBoundingClientRect();
+              if (rect.width > 0) {
+                hoverPosition.value = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+              }
+            },
+            onPointerleave: () => {
+              hoverPosition.value = null;
+            },
             onClick: (e: MouseEvent) => {
               const target = e.currentTarget as HTMLElement;
               const rect = target.getBoundingClientRect();
@@ -341,6 +375,16 @@ export const MaskflowPlayer = defineComponent({
                 style: { left: `${progressPercent}%` },
               }),
             ]),
+            hoverPosition.value !== null && duration > 0
+              ? h(
+                  'div',
+                  {
+                    className: 'mf-tooltip',
+                    style: { left: `${hoverPosition.value * 100}%` },
+                  },
+                  formatTime(hoverTime),
+                )
+              : null,
           ],
         );
       };
@@ -621,19 +665,36 @@ export const MaskflowPlayer = defineComponent({
         [
           h('video', { ref: videoRef, className: 'mf-video', playsinline: true }),
 
-          // Seek flash overlay
-          seekFlash.value.active
+          // Seek flash overlay (Stacked)
+          seekFlash.value.active && seekFlash.value.side !== 'center'
             ? h(
                 'div',
                 {
-                  className: `mf-seek-flash mf-seek-${seekFlash.value.side} mf-active`,
+                  className: `mf-seek-flash mf-seek-${seekFlash.value.side} ${
+                    seekFlash.value.active ? 'mf-active' : ''
+                  }`,
                 },
                 [
-                  h(
-                    'div',
-                    { className: 'mf-seek-flash-icon' },
-                    seekFlash.value.side === 'left' ? '« 10s' : '10s »',
-                  ),
+                  h('div', { key: seekFlash.value.seconds, className: 'mf-seek-flash-content' }, [
+                    h('div', { className: 'mf-seek-flash-arrows' }, [
+                      seekFlash.value.side === 'left'
+                        ? h(
+                            'svg',
+                            { viewBox: '0 0 24 24', width: 28, height: 28, fill: 'currentColor' },
+                            [h('path', { d: 'M12 6v12l-6-6 6-6zm6 0v12l-6-6 6-6z' })],
+                          )
+                        : h(
+                            'svg',
+                            { viewBox: '0 0 24 24', width: 28, height: 28, fill: 'currentColor' },
+                            [h('path', { d: 'M6 6v12l6-6-6-6zm6 0v12l6-6-6-6z' })],
+                          ),
+                    ]),
+                    h(
+                      'div',
+                      { className: 'mf-seek-flash-text' },
+                      `${seekFlash.value.seconds} seconds`,
+                    ),
+                  ]),
                 ],
               )
             : null,

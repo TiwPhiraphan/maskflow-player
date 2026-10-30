@@ -42,8 +42,12 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
   const [seekFlash, setSeekFlash] = useState<{
     active: boolean;
     side: 'left' | 'right' | 'center';
-    delta?: number | undefined;
-  }>({ active: false, side: 'center' });
+    seconds: number;
+  }>({ active: false, side: 'center', seconds: 10 });
+
+  const seekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const accumulatedSecondsRef = useRef<number>(0);
+  const lastSeekSideRef = useRef<'left' | 'right' | 'center'>('center');
 
   // Core Player Initialization (Strict Mode Safe)
   useEffect(() => {
@@ -73,15 +77,32 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
 
     setPlayer(playerInstance);
 
-    // Listen for double-tap seek to trigger visual flash animation
+    // Listen for seek / double-tap to trigger stacked visual flash animation
     const unsubDoubleTap = playerInstance.events.on('doubletap', (data) => {
-      setSeekFlash({ active: true, side: data.side, delta: data.delta });
-      setTimeout(() => {
+      if (data.side === 'center') return;
+      const absDelta = Math.abs(data.delta ?? 10);
+      if (lastSeekSideRef.current === data.side && accumulatedSecondsRef.current > 0) {
+        accumulatedSecondsRef.current += absDelta;
+      } else {
+        accumulatedSecondsRef.current = absDelta;
+        lastSeekSideRef.current = data.side;
+      }
+
+      setSeekFlash({
+        active: true,
+        side: data.side,
+        seconds: accumulatedSecondsRef.current,
+      });
+
+      if (seekTimerRef.current) clearTimeout(seekTimerRef.current);
+      seekTimerRef.current = setTimeout(() => {
         setSeekFlash((prev) => ({ ...prev, active: false }));
-      }, 500);
+        accumulatedSecondsRef.current = 0;
+      }, 750);
     });
 
     return () => {
+      if (seekTimerRef.current) clearTimeout(seekTimerRef.current);
       unsubDoubleTap();
       playerInstance.destroy();
       setPlayer(null);
@@ -127,15 +148,26 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
     <div ref={containerRef} className={containerClasses} data-theme={theme} style={mergedStyle}>
       <video ref={videoRef} className="mf-video" playsInline />
 
-      {/* Double-tap Seek Animation Overlays */}
-      {seekFlash.active && (
+      {/* Double-tap / Seek Animation Overlays (Stacked) */}
+      {seekFlash.active && seekFlash.side !== 'center' && (
         <div
           className={`mf-seek-flash mf-seek-${seekFlash.side} ${
             seekFlash.active ? 'mf-active' : ''
           }`}
         >
-          <div className="mf-seek-flash-icon">
-            {seekFlash.side === 'left' ? '« 10s' : seekFlash.side === 'right' ? '10s »' : ''}
+          <div key={seekFlash.seconds} className="mf-seek-flash-content">
+            <div className="mf-seek-flash-arrows">
+              {seekFlash.side === 'left' ? (
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                  <path d="M12 6v12l-6-6 6-6zm6 0v12l-6-6 6-6z" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                  <path d="M6 6v12l6-6-6-6zm6 0v12l6-6-6-6z" />
+                </svg>
+              )}
+            </div>
+            <div className="mf-seek-flash-text">{seekFlash.seconds} seconds</div>
           </div>
         </div>
       )}

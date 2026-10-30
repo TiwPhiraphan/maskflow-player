@@ -120,6 +120,13 @@ export function createPlayer(
     seekBy(delta: number): void {
       if (isDestroyed) return;
       player.seek(videoElement.currentTime + delta);
+      // Emit doubletap visual feedback unless initiated by gesture (which emits it directly)
+      if (!(player as unknown as { _isGestureSeeking?: boolean })._isGestureSeeking) {
+        events.emit('doubletap', {
+          side: delta < 0 ? 'left' : delta > 0 ? 'right' : 'center',
+          delta,
+        });
+      }
     },
 
     setVolume(volume: number): void {
