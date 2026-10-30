@@ -387,6 +387,11 @@
    Settings Menu / Dropdown & Bottom Sheet
    ========================================================================== */
 
+.mf-settings-container {
+  position: relative;
+  display: inline-flex;
+}
+
 .mf-menu {
   position: absolute;
   bottom: 60px;
@@ -437,6 +442,17 @@
 
 .mf-menu-item[aria-checked='true'] {
   color: #38bdf8;
+}
+
+.mf-menu-item-value {
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+.mf-menu-item-back {
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 4px;
 }
 
 /* ==========================================================================
@@ -523,6 +539,13 @@
   max-width: 420px;
 }
 
+.mf-error-retry {
+  width: auto !important;
+  padding: 8px 18px !important;
+  border-radius: var(--mf-radius-sm) !important;
+  font-weight: 600 !important;
+}
+
 /* ==========================================================================
    Container Query Breakpoints (<480px, 480-768px, >768px)
    ========================================================================== */
@@ -545,6 +568,11 @@
   }
 
   /* Bottom sheet style for settings menu on compact screens */
+  .mf-settings-container {
+    position: relative;
+    display: inline-flex;
+  }
+
   .mf-menu {
     position: fixed;
     bottom: 0;

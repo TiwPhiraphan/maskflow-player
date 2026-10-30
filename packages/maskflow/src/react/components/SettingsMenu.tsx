@@ -70,7 +70,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
   const hasQualities = qualities.length > 0;
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="mf-settings-container">
       <button
         ref={triggerRef}
         type="button"
@@ -98,7 +98,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
               onClick={() => setCurrentView('speed')}
             >
               <span>Speed</span>
-              <span style={{ opacity: 0.7 }}>{state.playbackRate}x ›</span>
+              <span className="mf-menu-item-value">{state.playbackRate}x ›</span>
             </button>
 
             {hasQualities && (
@@ -109,7 +109,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
                 onClick={() => setCurrentView('quality')}
               >
                 <span>Quality</span>
-                <span style={{ opacity: 0.7 }}>
+                <span className="mf-menu-item-value">
                   {state.quality === 'auto'
                     ? 'Auto'
                     : (qualities.find((q) => q.id === state.quality)?.label ?? state.quality)}
@@ -124,8 +124,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
           <>
             <button
               type="button"
-              className="mf-menu-item"
-              style={{ fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+              className="mf-menu-item mf-menu-item-back"
               onClick={() => setCurrentView('main')}
             >
               <span>‹ Back to settings</span>
@@ -153,8 +152,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
           <>
             <button
               type="button"
-              className="mf-menu-item"
-              style={{ fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+              className="mf-menu-item mf-menu-item-back"
               onClick={() => setCurrentView('main')}
             >
               <span>‹ Back to settings</span>

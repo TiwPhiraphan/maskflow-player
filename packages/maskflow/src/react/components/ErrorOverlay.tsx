@@ -24,12 +24,7 @@ export const ErrorOverlay: React.FC<ErrorOverlayProps> = ({ player, state }) => 
   return (
     <div className="mf-error-overlay" role="alert" aria-live="assertive">
       <div className="mf-error-msg">{errorMessage}</div>
-      <button
-        type="button"
-        className="mf-btn mf-glass"
-        style={{ width: 'auto', padding: '8px 16px', borderRadius: '8px' }}
-        onClick={handleRetry}
-      >
+      <button type="button" className="mf-btn mf-glass mf-error-retry" onClick={handleRetry}>
         Retry
       </button>
     </div>
