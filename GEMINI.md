@@ -338,6 +338,6 @@ Changesets config: `access: public`, `baseBranch: main`, ignore the private play
 - [x] Phase 4 — React components
 - [x] Phase 5 — Quality gates
 - [x] Phase 6 — Packaging
-- [ ] Phase 7 — CI/CD to npm
+- [x] Phase 7 — CI/CD to npm
 - [ ] Phase 8 — Vue adapter
 - [ ] Phase 9 — Docs
