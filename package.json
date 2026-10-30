@@ -1,0 +1,35 @@
+{
+  "name": "maskflow-root",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter maskflow build",
+    "dev": "pnpm --filter playground dev",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "size": "size-limit",
+    "changeset": "changeset",
+    "release": "pnpm build && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.12",
+    "@eslint/js": "^9.21.0",
+    "@playwright/test": "^1.50.1",
+    "@size-limit/preset-small-lib": "^11.2.0",
+    "@types/node": "^22.13.5",
+    "eslint": "^9.21.0",
+    "eslint-config-prettier": "^10.0.1",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.2",
+    "size-limit": "^11.2.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.1",
+    "vitest": "^3.0.6"
+  }
+}

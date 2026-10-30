@@ -1,0 +1,85 @@
+{
+  "name": "maskflow",
+  "version": "0.1.0",
+  "description": "Modern, accessible, mobile-first video player with futuristic glassmorphism controls",
+  "author": "TiwPhiraphan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TiwPhiraphan/maskflow-player.git"
+  },
+  "keywords": [
+    "video",
+    "player",
+    "glassmorphism",
+    "react",
+    "vue",
+    "hls",
+    "media",
+    "mobile",
+    "accessible",
+    "plyr"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "import": "./dist/vue/index.js",
+      "require": "./dist/vue/index.cjs"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "react": [
+        "./dist/react/index.d.ts"
+      ],
+      "vue": [
+        "./dist/vue/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "hls.js": "^1",
+    "react": ">=18",
+    "vue": ">=3.3"
+  },
+  "peerDependenciesMeta": {
+    "hls.js": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
