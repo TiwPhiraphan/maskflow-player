@@ -693,8 +693,8 @@
   padding: 8px 18px !important;
   border-radius: var(--mf-radius-sm, 4px) !important;
   font-weight: 600 !important;
-  background: var(--mf-accent-solid, #ff0000) !important;
-  color: #ffffff !important;
+  background: #ffffff !important;
+  color: #111111 !important;
 }
 
 /* ==========================================================================
@@ -702,8 +702,8 @@
    ========================================================================== */
 
 @container mf-player (max-width: 480px) {
-  .mf-volume-container {
-    display: none;
+  .mf-volume-slider {
+    display: none !important;
   }
 
   .mf-time {
@@ -722,20 +722,27 @@
     height: 36px;
   }
 
+  .mf-settings-container {
+    position: static;
+  }
+
   /* Bottom sheet style for settings menu on compact screens */
   .mf-menu {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
     border-radius: 16px 16px 0 0;
-    padding: 16px 8px;
+    padding: 12px 8px;
     background: rgba(28, 28, 28, 0.98);
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.8);
     transform: translateY(100%);
+    max-height: 85%;
+    overflow-y: auto;
+    z-index: 100;
   }
 
   .mf-menu.mf-menu-open {
