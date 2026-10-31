@@ -1,5 +1,11 @@
 # maskflow
 
+## 0.2.1
+
+### Patch Changes
+
+- d7c5240: Include README.md documentation and LICENSE in published package bundle.
+
 ## 0.2.0
 
 ### Minor Changes
