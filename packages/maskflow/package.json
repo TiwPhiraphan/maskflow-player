@@ -75,10 +75,12 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "node sync-meta.mjs && tsup",
     "typecheck": "tsc --noEmit",
     "publish:npm": "pnpm publish --provenance --access=public --no-git-checks"
   },
