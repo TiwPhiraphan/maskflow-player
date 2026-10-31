@@ -144,7 +144,7 @@ function App() {
             keyboard
             gestures
             persist
-            onReady={(p) => {
+            onReady={(p: MaskflowPlayerInstance) => {
               console.log('[maskflow] React Player Ready!', p);
             }}
           />

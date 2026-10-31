@@ -25,11 +25,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Quality check (lint, typecheck, build, test)
+      - name: Quality check (lint, build, typecheck, test)
         run: |
           pnpm lint
-          pnpm typecheck
           pnpm build
+          pnpm typecheck
           pnpm test
 
       - name: Install Playwright Browsers with dependencies
