@@ -1,6 +1,6 @@
 {
   "name": "maskflow",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "type": "module",
   "description": "Modern, accessible, mobile-first video player with futuristic glassmorphism controls",
   "author": "TiwPhiraphan",
@@ -80,7 +80,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "node sync-meta.cjs && tsup",
+    "build": "node sync-meta.mjs && tsup",
     "typecheck": "tsc --noEmit",
     "publish:npm": "pnpm publish --provenance --access=public --no-git-checks"
   },

@@ -1,5 +1,18 @@
 # maskflow
 
+## 0.2.2
+
+### Patch Changes
+
+- Fix mobile touch responsiveness and controls accessibility:
+  - Fix autohide immediately disappearing on finger lift by ignoring touch `pointerleave`.
+  - Fix gesture race condition between autohide timer and single-tap controls toggle.
+  - Fix iOS WebKit touch click cancellation by replacing premature focus-blur with post-click blur.
+  - Enlarge progress bar touch hit area to 42px and force scrubber thumb visibility on coarse pointer devices.
+  - Add pointer-capture touch drag scrubbing support for both React and Vue components.
+  - Disable native `<video>` pointer events so touch gestures reliably reach the player container.
+  - Optimize compact mobile button layout and hide PiP on narrow viewports (<380px).
+
 ## 0.2.1
 
 ### Patch Changes

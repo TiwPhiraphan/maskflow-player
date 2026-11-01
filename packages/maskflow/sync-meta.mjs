@@ -12,4 +12,3 @@ for (const filename of ['README.md', 'LICENSE']) {
     fs.copyFileSync(sourcePath, targetPath);
   }
 }
-

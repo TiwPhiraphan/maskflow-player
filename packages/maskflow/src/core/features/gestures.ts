@@ -17,6 +17,7 @@ export function createGestureManager(
   let lastTapX = 0;
   let lastTapY = 0;
   let isMenuDismissed = false;
+  let tapControlsVisible: boolean | null = null;
 
   const DOUBLE_TAP_MAX_DELAY = 280; // ms
   const DOUBLE_TAP_MAX_DISTANCE = 40; // px
@@ -40,6 +41,7 @@ export function createGestureManager(
   function handlePointerDown(event: PointerEvent): void {
     if (!event.isPrimary) return;
     isMenuDismissed = Boolean(targetElement.querySelector('.mf-menu.mf-menu-open'));
+    tapControlsVisible = player.getState().controlsVisible;
   }
 
   function handlePointerUp(event: PointerEvent): void {
@@ -52,6 +54,7 @@ export function createGestureManager(
     // If pointerdown happened while a menu was open, the tap was meant to dismiss the menu
     if (isMenuDismissed) {
       isMenuDismissed = false;
+      tapControlsVisible = null;
       return;
     }
 
@@ -60,6 +63,9 @@ export function createGestureManager(
     const y = event.clientY;
     const timeDelta = now - lastTapTime;
     const distance = Math.hypot(x - lastTapX, y - lastTapY);
+    const initialControlsVisible =
+      tapControlsVisible !== null ? tapControlsVisible : player.getState().controlsVisible;
+    tapControlsVisible = null;
 
     if (
       lastTapTime > 0 &&
@@ -106,9 +112,8 @@ export function createGestureManager(
       clearTapTimer();
 
       tapTimer = setTimeout(() => {
-        // Single tap action: toggle controls visibility
-        const currentVisible = player.getState().controlsVisible;
-        player.setControlsVisible(!currentVisible);
+        // Single tap action: toggle controls visibility based on state when tapped
+        player.setControlsVisible(!initialControlsVisible);
         tapTimer = null;
       }, DOUBLE_TAP_MAX_DELAY);
     }

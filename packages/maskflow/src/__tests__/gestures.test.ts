@@ -6,6 +6,7 @@ import type { MaskflowPlayer, PlayerEvents, PlayerState } from '../core/types';
 describe('GestureManager', () => {
   let target: HTMLDivElement;
   let mockPlayer: MaskflowPlayer;
+  let mockState: PlayerState;
   let events: ReturnType<typeof createEventEmitter<PlayerEvents>>;
 
   beforeEach(() => {
@@ -31,7 +32,7 @@ describe('GestureManager', () => {
 
     events = createEventEmitter<PlayerEvents>();
 
-    const mockState: PlayerState = {
+    mockState = {
       status: 'playing',
       currentTime: 30,
       duration: 100,
@@ -63,17 +64,25 @@ describe('GestureManager', () => {
   });
 
   function firePointer(x: number, y: number) {
-    const event = new MouseEvent('pointerup', {
+    const downEvent = new MouseEvent('pointerdown', {
       bubbles: true,
       clientX: x,
       clientY: y,
     });
-    // Set isPrimary = true
-    Object.defineProperty(event, 'isPrimary', { value: true });
-    target.dispatchEvent(event);
+    Object.defineProperty(downEvent, 'isPrimary', { value: true });
+    target.dispatchEvent(downEvent);
+
+    const upEvent = new MouseEvent('pointerup', {
+      bubbles: true,
+      clientX: x,
+      clientY: y,
+    });
+    Object.defineProperty(upEvent, 'isPrimary', { value: true });
+    target.dispatchEvent(upEvent);
   }
 
-  it('triggers single tap to toggle controls', () => {
+  it('triggers single tap to toggle controls when visible', () => {
+    mockState.controlsVisible = true;
     const manager = createGestureManager(target, mockPlayer);
 
     firePointer(500, 250);
@@ -82,6 +91,20 @@ describe('GestureManager', () => {
     // Advance past single-tap timer
     vi.advanceTimersByTime(300);
     expect(mockPlayer.setControlsVisible).toHaveBeenCalledWith(false);
+
+    manager.destroy();
+  });
+
+  it('triggers single tap to show controls when hidden', () => {
+    mockState.controlsVisible = false;
+    const manager = createGestureManager(target, mockPlayer);
+
+    firePointer(500, 250);
+    expect(mockPlayer.setControlsVisible).not.toHaveBeenCalled();
+
+    // Advance past single-tap timer
+    vi.advanceTimersByTime(300);
+    expect(mockPlayer.setControlsVisible).toHaveBeenCalledWith(true);
 
     manager.destroy();
   });

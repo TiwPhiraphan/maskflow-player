@@ -8,10 +8,7 @@ export interface BigPlayButtonProps {
 }
 
 export const BigPlayButton: React.FC<BigPlayButtonProps> = ({ player, state }) => {
-  if (
-    state.status === 'playing' ||
-    (player.video && !player.video.paused && !player.video.ended)
-  ) {
+  if (state.status === 'playing' || (player.video && !player.video.paused && !player.video.ended)) {
     return null;
   }
 
@@ -23,7 +20,6 @@ export const BigPlayButton: React.FC<BigPlayButtonProps> = ({ player, state }) =
       className="mf-big-play mf-glass"
       aria-label={isEnded ? 'Replay' : 'Play'}
       onClick={() => player.toggle()}
-      onFocus={(e) => e.currentTarget.blur()}
     >
       {isEnded ? <ReplayIcon /> : <PlayIcon />}
     </button>

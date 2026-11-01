@@ -40,10 +40,18 @@ const App = defineComponent({
       h('div', { className: `demo-page theme-${theme.value}` }, [
         h('div', { className: 'demo-container' }, [
           h('header', { className: 'demo-header' }, [
-            h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } }, [
-              h('h1', { className: 'demo-title' }, '🔮 Maskflow Video Player (Vue 3)'),
-              h('a', { href: '/', className: 'demo-btn', style: { textDecoration: 'none' } }, 'Switch to React Playground →'),
-            ]),
+            h(
+              'div',
+              { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+              [
+                h('h1', { className: 'demo-title' }, '🔮 Maskflow Video Player (Vue 3)'),
+                h(
+                  'a',
+                  { href: '/', className: 'demo-btn', style: { textDecoration: 'none' } },
+                  'Switch to React Playground →',
+                ),
+              ],
+            ),
             h(
               'p',
               { className: 'demo-desc' },
@@ -127,7 +135,8 @@ const App = defineComponent({
                   value: theme.value,
                   className: 'demo-select',
                   onChange: (e: Event) => {
-                    theme.value = (e.target as HTMLSelectElement).value as 'dark' | 'light' | 'auto';
+                    theme.value = (e.target as HTMLSelectElement).value as
+                      'dark' | 'light' | 'auto';
                   },
                 },
                 [

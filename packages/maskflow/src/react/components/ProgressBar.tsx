@@ -28,7 +28,12 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state }) => {
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     setIsDragging(true);
-    e.currentTarget.setPointerCapture(e.pointerId);
+    player.lockControls(true);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
 
     const ratio = calculateRatio(e.clientX);
     player.seek(ratio * duration);
@@ -43,14 +48,25 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state }) => {
     }
   };
 
+  const endDrag = (target: HTMLElement, pointerId: number) => {
+    setIsDragging(false);
+    player.lockControls(false);
+    try {
+      target.releasePointerCapture(pointerId);
+    } catch {
+      // Ignore if pointer capture lost
+    }
+  };
+
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isDragging) {
-      setIsDragging(false);
-      try {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      } catch {
-        // Ignore if pointer capture lost
-      }
+      endDrag(e.currentTarget, e.pointerId);
+    }
+  };
+
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      endDrag(e.currentTarget, e.pointerId);
     }
   };
 
@@ -92,6 +108,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state }) => {
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       onPointerLeave={handlePointerLeave}
       onKeyDown={handleKeyDown}
     >

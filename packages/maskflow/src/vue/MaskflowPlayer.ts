@@ -142,11 +142,7 @@ export const MaskflowPlayer = defineComponent({
     const handleOutsideClick = (e: Event) => {
       if (!isMenuOpen.value) return;
       const target = e.target as Node | null;
-      if (
-        settingsContainerRef.value &&
-        target &&
-        !settingsContainerRef.value.contains(target)
-      ) {
+      if (settingsContainerRef.value && target && !settingsContainerRef.value.contains(target)) {
         closeSettings();
       }
     };
@@ -183,6 +179,7 @@ export const MaskflowPlayer = defineComponent({
     let lastSeekSide: 'left' | 'right' | 'center' = 'center';
 
     const hoverPosition = ref<number | null>(null);
+    const isProgressDragging = ref(false);
 
     // Reactive store state
     const state = useMaskflow(playerInstance);
@@ -298,8 +295,6 @@ export const MaskflowPlayer = defineComponent({
       destroy: () => playerInstance.value?.destroy(),
     });
 
-    const blurTarget = (e: FocusEvent) => (e.currentTarget as HTMLElement | null)?.blur();
-
     return () => {
       const p = playerInstance.value;
       const s = state.value;
@@ -336,15 +331,26 @@ export const MaskflowPlayer = defineComponent({
       const renderProgressBar = (): VNode | null => {
         if (!hasControl('progress') || !p) return null;
         const duration = s.duration > 0 ? s.duration : 0;
-        const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (s.currentTime / duration) * 100)) : 0;
+        const progressPercent =
+          duration > 0 ? Math.min(100, Math.max(0, (s.currentTime / duration) * 100)) : 0;
         const bufferedPercent = Math.min(100, Math.max(0, s.buffered * 100));
         const hoverTime =
           hoverPosition.value !== null && duration > 0 ? hoverPosition.value * duration : 0;
 
+        const endDrag = (target: HTMLElement, pointerId: number) => {
+          isProgressDragging.value = false;
+          p.lockControls(false);
+          try {
+            target.releasePointerCapture(pointerId);
+          } catch {
+            // Ignore
+          }
+        };
+
         return h(
           'div',
           {
-            className: 'mf-progress',
+            className: `mf-progress ${isProgressDragging.value ? 'mf-dragging' : ''}`,
             role: 'slider',
             tabIndex: 0,
             'aria-label': 'Seek progress',
@@ -352,15 +358,47 @@ export const MaskflowPlayer = defineComponent({
             'aria-valuemax': Math.round(duration),
             'aria-valuenow': Math.round(s.currentTime),
             'aria-valuetext': `${formatTime(s.currentTime)} of ${formatTime(duration)}`,
+            onPointerdown: (e: PointerEvent) => {
+              if (e.button !== 0) return;
+              isProgressDragging.value = true;
+              p.lockControls(true);
+              const target = e.currentTarget as HTMLElement;
+              try {
+                target.setPointerCapture(e.pointerId);
+              } catch {
+                // Ignore
+              }
+              const rect = target.getBoundingClientRect();
+              if (rect.width > 0) {
+                const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                p.seek(ratio * duration);
+              }
+            },
             onPointermove: (e: PointerEvent) => {
               const target = e.currentTarget as HTMLElement;
               const rect = target.getBoundingClientRect();
               if (rect.width > 0) {
-                hoverPosition.value = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                hoverPosition.value = ratio;
+                if (isProgressDragging.value) {
+                  p.seek(ratio * duration);
+                }
+              }
+            },
+            onPointerup: (e: PointerEvent) => {
+              if (isProgressDragging.value) {
+                endDrag(e.currentTarget as HTMLElement, e.pointerId);
+              }
+            },
+            onPointercancel: (e: PointerEvent) => {
+              if (isProgressDragging.value) {
+                endDrag(e.currentTarget as HTMLElement, e.pointerId);
               }
             },
             onPointerleave: () => {
-              hoverPosition.value = null;
+              if (!isProgressDragging.value) {
+                hoverPosition.value = null;
+              }
             },
             onClick: (e: MouseEvent) => {
               const target = e.currentTarget as HTMLElement;
@@ -423,7 +461,6 @@ export const MaskflowPlayer = defineComponent({
               'aria-haspopup': 'menu',
               'aria-expanded': isMenuOpen.value,
               onClick: toggleSettings,
-              onFocus: blurTarget,
             },
             [SettingsIcon()],
           ),
@@ -505,19 +542,35 @@ export const MaskflowPlayer = defineComponent({
                         ),
                         h('div', { className: 'mf-shortcuts-table' }, [
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'Space'), ' / ', h('kbd', 'k')]),
+                            h('span', { className: 'mf-shortcut-keys' }, [
+                              h('kbd', 'Space'),
+                              ' / ',
+                              h('kbd', 'k'),
+                            ]),
                             h('span', 'Play / Pause'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', '←'), ' / ', h('kbd', '→')]),
+                            h('span', { className: 'mf-shortcut-keys' }, [
+                              h('kbd', '←'),
+                              ' / ',
+                              h('kbd', '→'),
+                            ]),
                             h('span', 'Seek 5s'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'j'), ' / ', h('kbd', 'l')]),
+                            h('span', { className: 'mf-shortcut-keys' }, [
+                              h('kbd', 'j'),
+                              ' / ',
+                              h('kbd', 'l'),
+                            ]),
                             h('span', 'Seek 10s'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'Home'), ' / ', h('kbd', 'End')]),
+                            h('span', { className: 'mf-shortcut-keys' }, [
+                              h('kbd', 'Home'),
+                              ' / ',
+                              h('kbd', 'End'),
+                            ]),
                             h('span', 'Start / End'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
@@ -525,7 +578,11 @@ export const MaskflowPlayer = defineComponent({
                             h('span', 'Jump 0%–90%'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', '↑'), ' / ', h('kbd', '↓')]),
+                            h('span', { className: 'mf-shortcut-keys' }, [
+                              h('kbd', '↑'),
+                              ' / ',
+                              h('kbd', '↓'),
+                            ]),
                             h('span', 'Volume ±5%'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
@@ -541,84 +598,96 @@ export const MaskflowPlayer = defineComponent({
                             h('span', 'Captions'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'p'), ' / ', h('kbd', 'i')]),
+                            h('span', { className: 'mf-shortcut-keys' }, [
+                              h('kbd', 'p'),
+                              ' / ',
+                              h('kbd', 'i'),
+                            ]),
                             h('span', 'Picture-in-Picture'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', '<'), ' / ', h('kbd', '>')]),
+                            h('span', { className: 'mf-shortcut-keys' }, [
+                              h('kbd', '<'),
+                              ' / ',
+                              h('kbd', '>'),
+                            ]),
                             h('span', 'Speed'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', ','), ' / ', h('kbd', '.')]),
+                            h('span', { className: 'mf-shortcut-keys' }, [
+                              h('kbd', ','),
+                              ' / ',
+                              h('kbd', '.'),
+                            ]),
                             h('span', 'Frame (paused)'),
                           ]),
                         ]),
                       ]),
                     ]
-                : currentMenuView.value === 'speed'
-                  ? [
-                      h(
-                        'button',
-                        {
-                          type: 'button',
-                          className: 'mf-menu-item mf-menu-item-back',
-                          onClick: () => {
-                            currentMenuView.value = 'main';
-                          },
-                        },
-                        [h('span', '‹ Back to settings')],
-                      ),
-                      ...SPEEDS.map((sp) =>
+                  : currentMenuView.value === 'speed'
+                    ? [
                         h(
                           'button',
                           {
-                            key: sp,
                             type: 'button',
-                            className: 'mf-menu-item',
-                            role: 'menuitemradio',
-                            'aria-checked': s.playbackRate === sp,
+                            className: 'mf-menu-item mf-menu-item-back',
                             onClick: () => {
-                              p.setRate(sp);
-                              closeSettings();
+                              currentMenuView.value = 'main';
                             },
                           },
-                          [
-                            h('span', sp === 1 ? '1x (Normal)' : `${sp}x`),
-                            s.playbackRate === sp ? h('span', '✓') : null,
-                          ],
+                          [h('span', '‹ Back to settings')],
                         ),
-                      ),
-                    ]
-                  : [
-                      h(
-                        'button',
-                        {
-                          type: 'button',
-                          className: 'mf-menu-item mf-menu-item-back',
-                          onClick: () => {
-                            currentMenuView.value = 'main';
-                          },
-                        },
-                        [h('span', '‹ Back to settings')],
-                      ),
-                      ...qualities.map((q) =>
+                        ...SPEEDS.map((sp) =>
+                          h(
+                            'button',
+                            {
+                              key: sp,
+                              type: 'button',
+                              className: 'mf-menu-item',
+                              role: 'menuitemradio',
+                              'aria-checked': s.playbackRate === sp,
+                              onClick: () => {
+                                p.setRate(sp);
+                                closeSettings();
+                              },
+                            },
+                            [
+                              h('span', sp === 1 ? '1x (Normal)' : `${sp}x`),
+                              s.playbackRate === sp ? h('span', '✓') : null,
+                            ],
+                          ),
+                        ),
+                      ]
+                    : [
                         h(
                           'button',
                           {
-                            key: String(q.id),
                             type: 'button',
-                            className: 'mf-menu-item',
-                            role: 'menuitemradio',
-                            'aria-checked': s.quality === q.id,
+                            className: 'mf-menu-item mf-menu-item-back',
                             onClick: () => {
-                              p.setQuality(q.id);
-                              closeSettings();
+                              currentMenuView.value = 'main';
                             },
                           },
-                          [h('span', q.label), s.quality === q.id ? h('span', '✓') : null],
+                          [h('span', '‹ Back to settings')],
                         ),
-                      ),
-                    ],
+                        ...qualities.map((q) =>
+                          h(
+                            'button',
+                            {
+                              key: String(q.id),
+                              type: 'button',
+                              className: 'mf-menu-item',
+                              role: 'menuitemradio',
+                              'aria-checked': s.quality === q.id,
+                              onClick: () => {
+                                p.setQuality(q.id);
+                                closeSettings();
+                              },
+                            },
+                            [h('span', q.label), s.quality === q.id ? h('span', '✓') : null],
+                          ),
+                        ),
+                      ],
             ],
           ),
         ]);
@@ -628,129 +697,131 @@ export const MaskflowPlayer = defineComponent({
       const renderControlBar = (): VNode | null => {
         if (!p) return null;
 
-        return h('div', { className: 'mf-controls mf-glass', role: 'toolbar', 'aria-label': 'Media controls' }, [
-          renderProgressBar(),
-          h('div', { className: 'mf-controls-row' }, [
-            // Left Group
-            h('div', { className: 'mf-controls-left' }, [
-              hasControl('play')
-                ? h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'mf-btn',
-                      'aria-label': s.status === 'playing' ? 'Pause' : 'Play',
-                      onClick: () => p.toggle(),
-                      onFocus: blurTarget,
-                    },
-                    [s.status === 'playing' ? PauseIcon() : PlayIcon()],
-                  )
-                : null,
-              hasControl('volume')
-                ? h('div', { className: 'mf-volume-container' }, [
-                    h(
+        return h(
+          'div',
+          { className: 'mf-controls mf-glass', role: 'toolbar', 'aria-label': 'Media controls' },
+          [
+            renderProgressBar(),
+            h('div', { className: 'mf-controls-row' }, [
+              // Left Group
+              h('div', { className: 'mf-controls-left' }, [
+                hasControl('play')
+                  ? h(
                       'button',
                       {
                         type: 'button',
                         className: 'mf-btn',
-                        'aria-label': s.muted || s.volume === 0 ? 'Unmute' : 'Mute',
-                        onClick: () => p.toggleMute(),
-                        onFocus: blurTarget,
+                        'aria-label': s.status === 'playing' ? 'Pause' : 'Play',
+                        onClick: () => p.toggle(),
                       },
-                      [s.muted || s.volume === 0 ? VolumeMutedIcon() : VolumeHighIcon()],
-                    ),
-                    h(
+                      [s.status === 'playing' ? PauseIcon() : PlayIcon()],
+                    )
+                  : null,
+                hasControl('volume')
+                  ? h('div', { className: 'mf-volume-container' }, [
+                      h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'mf-btn',
+                          'aria-label': s.muted || s.volume === 0 ? 'Unmute' : 'Mute',
+                          onClick: () => p.toggleMute(),
+                        },
+                        [s.muted || s.volume === 0 ? VolumeMutedIcon() : VolumeHighIcon()],
+                      ),
+                      h(
+                        'div',
+                        {
+                          className: 'mf-volume-slider',
+                          role: 'slider',
+                          tabIndex: 0,
+                          'aria-label': 'Volume',
+                          'aria-valuemin': 0,
+                          'aria-valuemax': 100,
+                          'aria-valuenow': Math.round((s.muted ? 0 : s.volume) * 100),
+                          'aria-valuetext': `${Math.round((s.muted ? 0 : s.volume) * 100)}%`,
+                          onClick: (e: MouseEvent) => {
+                            const target = e.currentTarget as HTMLElement;
+                            const rect = target.getBoundingClientRect();
+                            const ratio = Math.max(
+                              0,
+                              Math.min(1, (e.clientX - rect.left) / rect.width),
+                            );
+                            p.setVolume(ratio);
+                          },
+                        },
+                        [
+                          h('div', { className: 'mf-volume-rail' }, [
+                            h('div', {
+                              className: 'mf-volume-fill',
+                              style: { width: `${(s.muted ? 0 : s.volume) * 100}%` },
+                            }),
+                          ]),
+                        ],
+                      ),
+                    ])
+                  : null,
+                hasControl('time')
+                  ? h(
                       'div',
                       {
-                        className: 'mf-volume-slider',
-                        role: 'slider',
-                        tabIndex: 0,
-                        'aria-label': 'Volume',
-                        'aria-valuemin': 0,
-                        'aria-valuemax': 100,
-                        'aria-valuenow': Math.round((s.muted ? 0 : s.volume) * 100),
-                        'aria-valuetext': `${Math.round((s.muted ? 0 : s.volume) * 100)}%`,
-                        onClick: (e: MouseEvent) => {
-                          const target = e.currentTarget as HTMLElement;
-                          const rect = target.getBoundingClientRect();
-                          const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                          p.setVolume(ratio);
-                        },
+                        className: 'mf-time',
+                        'aria-label': `Current time ${formatTime(s.currentTime)} of ${formatTime(s.duration)}`,
                       },
                       [
-                        h('div', { className: 'mf-volume-rail' }, [
-                          h('div', {
-                            className: 'mf-volume-fill',
-                            style: { width: `${(s.muted ? 0 : s.volume) * 100}%` },
-                          }),
-                        ]),
+                        h('span', { className: 'mf-time-current' }, formatTime(s.currentTime)),
+                        h('span', { className: 'mf-time-separator' }, '/'),
+                        h('span', { className: 'mf-time-duration' }, formatTime(s.duration)),
                       ],
-                    ),
-                  ])
-                : null,
-              hasControl('time')
-                ? h(
-                    'div',
-                    {
-                      className: 'mf-time',
-                      'aria-label': `Current time ${formatTime(s.currentTime)} of ${formatTime(s.duration)}`,
-                    },
-                    [
-                      h('span', { className: 'mf-time-current' }, formatTime(s.currentTime)),
-                      h('span', { className: 'mf-time-separator' }, '/'),
-                      h('span', { className: 'mf-time-duration' }, formatTime(s.duration)),
-                    ],
-                  )
-                : null,
-            ]),
+                    )
+                  : null,
+              ]),
 
-            // Right Group
-            h('div', { className: 'mf-controls-right' }, [
-              hasControl('captions')
-                ? h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: `mf-btn ${s.captionsEnabled ? 'mf-active' : ''}`,
-                      'aria-label': 'Captions',
-                      'aria-pressed': s.captionsEnabled,
-                      onClick: () => p.toggleCaptions(),
-                      onFocus: blurTarget,
-                    },
-                    [CaptionsIcon()],
-                  )
-                : null,
-              renderSettingsMenu(),
-              hasControl('pip')
-                ? h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'mf-btn',
-                      'aria-label': 'Picture in Picture',
-                      onClick: () => p.togglePip(),
-                      onFocus: blurTarget,
-                    },
-                    [PipIcon()],
-                  )
-                : null,
-              hasControl('fullscreen')
-                ? h(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'mf-btn',
-                      'aria-label': s.isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen',
-                      'aria-pressed': s.isFullscreen,
-                      onClick: () => p.toggleFullscreen(),
-                      onFocus: blurTarget,
-                    },
-                    [s.isFullscreen ? FullscreenExitIcon() : FullscreenEnterIcon()],
-                  )
-                : null,
+              // Right Group
+              h('div', { className: 'mf-controls-right' }, [
+                hasControl('captions')
+                  ? h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: `mf-btn ${s.captionsEnabled ? 'mf-active' : ''}`,
+                        'aria-label': 'Captions',
+                        'aria-pressed': s.captionsEnabled,
+                        onClick: () => p.toggleCaptions(),
+                      },
+                      [CaptionsIcon()],
+                    )
+                  : null,
+                renderSettingsMenu(),
+                hasControl('pip')
+                  ? h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'mf-btn',
+                        'aria-label': 'Picture in Picture',
+                        onClick: () => p.togglePip(),
+                      },
+                      [PipIcon()],
+                    )
+                  : null,
+                hasControl('fullscreen')
+                  ? h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'mf-btn',
+                        'aria-label': s.isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen',
+                        'aria-pressed': s.isFullscreen,
+                        onClick: () => p.toggleFullscreen(),
+                      },
+                      [s.isFullscreen ? FullscreenExitIcon() : FullscreenEnterIcon()],
+                    )
+                  : null,
+              ]),
             ]),
-          ]),
-        ]);
+          ],
+        );
       };
 
       return h(
@@ -805,16 +876,17 @@ export const MaskflowPlayer = defineComponent({
                 {
                   type: 'button',
                   className: 'mf-big-play',
-                  'aria-label': s.status === 'ended' ? 'Replay' : 'Play video',
+                  'aria-label': s.status === 'ended' ? 'Replay' : 'Play',
                   onClick: () => p.toggle(),
-                  onFocus: blurTarget,
                 },
                 [PlayIcon()],
               )
             : null,
 
           // Spinner
-          s.status === 'loading' ? h('div', { className: 'mf-spinner', 'aria-label': 'Loading' }) : null,
+          s.status === 'loading' || s.status === 'buffering'
+            ? h('div', { className: 'mf-spinner', role: 'status', 'aria-label': 'Loading media' })
+            : null,
 
           // Error overlay
           s.status === 'error'

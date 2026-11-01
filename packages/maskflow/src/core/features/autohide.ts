@@ -61,11 +61,26 @@ export function createAutohideManager(
     startTimer();
   }
 
-  const handleActivity = () => {
+  const handleActivity = (e?: Event) => {
+    // For touch devices, pointermove fires during touch scrolls/drags; don't trigger show() on touchmove
+    if (e && 'pointerType' in e && (e as PointerEvent).pointerType === 'touch') {
+      return;
+    }
     show();
   };
 
-  const handlePointerLeave = () => {
+  const handlePointerDown = () => {
+    // If controls are already visible, touch/click activity refreshes the autohide timer
+    if (player.getState().controlsVisible) {
+      startTimer();
+    }
+  };
+
+  const handlePointerLeave = (e: PointerEvent) => {
+    // Never hide on touch/pen leave (fires on mobile devices every time a finger lifts!)
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      return;
+    }
     if (player.getState().status === 'playing' && !shouldStayVisible()) {
       hide();
     }
@@ -73,7 +88,7 @@ export function createAutohideManager(
 
   // Activity events
   container.addEventListener('pointermove', handleActivity);
-  container.addEventListener('pointerdown', handleActivity);
+  container.addEventListener('pointerdown', handlePointerDown);
   container.addEventListener('keydown', handleActivity);
   container.addEventListener('focusin', handleActivity);
   container.addEventListener('pointerleave', handlePointerLeave);
@@ -93,6 +108,14 @@ export function createAutohideManager(
     player.setControlsVisible(true);
   });
 
+  const unsubControls = player.events.on('controlschange', (visible) => {
+    if (visible) {
+      startTimer();
+    } else {
+      clearTimer();
+    }
+  });
+
   return {
     show,
     hide,
@@ -108,13 +131,14 @@ export function createAutohideManager(
     destroy(): void {
       clearTimer();
       container.removeEventListener('pointermove', handleActivity);
-      container.removeEventListener('pointerdown', handleActivity);
+      container.removeEventListener('pointerdown', handlePointerDown);
       container.removeEventListener('keydown', handleActivity);
       container.removeEventListener('focusin', handleActivity);
       container.removeEventListener('pointerleave', handlePointerLeave);
       unsubPlay();
       unsubPause();
       unsubEnded();
+      unsubControls();
     },
   };
 }

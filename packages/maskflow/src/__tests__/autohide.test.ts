@@ -81,4 +81,36 @@ describe('AutohideManager', () => {
 
     manager.destroy();
   });
+
+  it('does not hide controls on pointerleave from touch (mobile usability)', () => {
+    const manager = createAutohideManager(container, mockPlayer, 2000);
+    manager.show();
+
+    // Simulate mobile touch pointerleave (when finger lifts off digitizer)
+    const touchLeaveEvent = new Event('pointerleave');
+    Object.defineProperty(touchLeaveEvent, 'pointerType', { value: 'touch' });
+    container.dispatchEvent(touchLeaveEvent);
+
+    // Should NOT hide immediately
+    expect(mockPlayer.setControlsVisible).not.toHaveBeenCalledWith(false);
+
+    // But should still hide after full delay
+    vi.advanceTimersByTime(2001);
+    expect(mockPlayer.setControlsVisible).toHaveBeenCalledWith(false);
+
+    manager.destroy();
+  });
+
+  it('hides controls on mouse pointerleave (desktop)', () => {
+    const manager = createAutohideManager(container, mockPlayer, 2000);
+    manager.show();
+
+    const mouseLeaveEvent = new Event('pointerleave');
+    Object.defineProperty(mouseLeaveEvent, 'pointerType', { value: 'mouse' });
+    container.dispatchEvent(mouseLeaveEvent);
+
+    expect(mockPlayer.setControlsVisible).toHaveBeenCalledWith(false);
+
+    manager.destroy();
+  });
 });

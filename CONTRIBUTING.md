@@ -21,14 +21,17 @@ This repository is managed with [pnpm](https://pnpm.io) workspaces:
 ## 🚀 Getting Started
 
 1. **Install dependencies:**
+
    ```bash
    pnpm install
    ```
 
 2. **Run playground dev server:**
+
    ```bash
    pnpm dev
    ```
+
    Open `http://localhost:5173` for the React demo or `http://localhost:5173/vue.html` for the Vue 3 demo.
 
 3. **Build library:**
@@ -63,6 +66,7 @@ pnpm check:pkg
 ```
 
 ### Bundle Size Budgets
+
 - `maskflow` (core): ≤ **12 kB** gzipped
 - `maskflow/react`: ≤ **25 kB** gzipped (including core)
 - `maskflow/vue`: ≤ **25 kB** gzipped (including core)
@@ -74,6 +78,7 @@ pnpm check:pkg
 We use [Changesets](https://github.com/changesets/changesets) for package versioning and changelog generation.
 
 When making a change that should be released:
+
 1. Run:
    ```bash
    pnpm changeset
@@ -96,4 +101,3 @@ We use conventional commit format:
 - `refactor:` Code restructuring without functional changes
 - `ci:` CI/CD and workflow changes
 - `chore:` Tooling and maintenance
-

@@ -20,7 +20,6 @@ export const PlayButton: React.FC<PlayButtonProps> = ({ player, state }) => {
       aria-label={label}
       aria-pressed={isPlaying}
       onClick={() => player.toggle()}
-      onFocus={(e) => e.currentTarget.blur()}
     >
       {isEnded ? <ReplayIcon /> : isPlaying ? <PauseIcon /> : <PlayIcon />}
     </button>

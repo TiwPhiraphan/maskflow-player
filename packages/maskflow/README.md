@@ -6,6 +6,7 @@
 [![npm version](https://img.shields.io/npm/v/maskflow.svg)](https://www.npmjs.com/package/maskflow)
 
 Maskflow is published as a single unscoped npm package (`maskflow`) with subpath exports:
+
 - `maskflow/react`: React component (`MaskflowPlayer`) and hook (`useMaskflow`)
 - `maskflow/vue`: Vue 3 component (`MaskflowPlayer`) and composable (`useMaskflow`)
 - `maskflow`: Framework-agnostic core engine (`createPlayer`)
@@ -117,24 +118,24 @@ player.play();
 
 The props and options are identical across React (`onX` event props) and Vue 3 (`@x` events):
 
-| Option / Prop         | Type                                        | Default                                                                        | Description                                                    |
-| --------------------- | ------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| `src`                 | `string \| { src: string; type: string }[]` | *(required)*                                                                   | Video URL or array of source objects. Supports MP4, WebM, HLS. |
-| `poster`              | `string`                                    | `undefined`                                                                    | Video poster image URL.                                        |
-| `tracks`              | `MediaTrackItem[]`                          | `[]`                                                                           | Array of WebVTT subtitle/captions `<track>` definitions.       |
-| `aspectRatio`         | `string`                                    | `'16/9'`                                                                       | Aspect ratio of player container (e.g. `'16/9'`, `'4/3'`).     |
-| `theme`               | `'dark' \| 'light' \| 'auto'`               | `'dark'`                                                                       | Visual glass theme.                                            |
-| `accent`              | `string`                                    | `undefined`                                                                    | Custom accent color (CSS hex or gradient string).              |
-| `autoPlay`            | `boolean`                                   | `false`                                                                        | Autoplay video on load.                                        |
-| `muted`               | `boolean`                                   | `false`                                                                        | Start playback muted.                                          |
-| `loop`                | `boolean`                                   | `false`                                                                        | Loop playback when ended.                                      |
-| `controls`            | `ControlItem[]`                             | `['play','progress','time','volume','captions','settings','pip','fullscreen']` | Array of control buttons and bars to render.                   |
-| `keyboard`            | `boolean`                                   | `true`                                                                         | Enable keyboard hotkeys when player is focused.                |
-| `gestures`            | `boolean`                                   | `true`                                                                         | Enable touch double-tap seek (±10s) and controls toggle.       |
-| `persist`             | `boolean`                                   | `false`                                                                        | Remember volume, mute state, and playback speed in storage.    |
-| `autoHideDelay`       | `number`                                    | `2500`                                                                         | Inactivity delay in milliseconds before hiding controls.       |
-| `onReady` / `@ready`  | `(player: MaskflowPlayer) => void`          | `undefined`                                                                    | Invoked when player instance is ready.                         |
-| `onError` / `@error`  | `(err: unknown) => void`                    | `undefined`                                                                    | Invoked when a media or player error occurs.                   |
+| Option / Prop        | Type                                        | Default                                                                        | Description                                                    |
+| -------------------- | ------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| `src`                | `string \| { src: string; type: string }[]` | _(required)_                                                                   | Video URL or array of source objects. Supports MP4, WebM, HLS. |
+| `poster`             | `string`                                    | `undefined`                                                                    | Video poster image URL.                                        |
+| `tracks`             | `MediaTrackItem[]`                          | `[]`                                                                           | Array of WebVTT subtitle/captions `<track>` definitions.       |
+| `aspectRatio`        | `string`                                    | `'16/9'`                                                                       | Aspect ratio of player container (e.g. `'16/9'`, `'4/3'`).     |
+| `theme`              | `'dark' \| 'light' \| 'auto'`               | `'dark'`                                                                       | Visual glass theme.                                            |
+| `accent`             | `string`                                    | `undefined`                                                                    | Custom accent color (CSS hex or gradient string).              |
+| `autoPlay`           | `boolean`                                   | `false`                                                                        | Autoplay video on load.                                        |
+| `muted`              | `boolean`                                   | `false`                                                                        | Start playback muted.                                          |
+| `loop`               | `boolean`                                   | `false`                                                                        | Loop playback when ended.                                      |
+| `controls`           | `ControlItem[]`                             | `['play','progress','time','volume','captions','settings','pip','fullscreen']` | Array of control buttons and bars to render.                   |
+| `keyboard`           | `boolean`                                   | `true`                                                                         | Enable keyboard hotkeys when player is focused.                |
+| `gestures`           | `boolean`                                   | `true`                                                                         | Enable touch double-tap seek (±10s) and controls toggle.       |
+| `persist`            | `boolean`                                   | `false`                                                                        | Remember volume, mute state, and playback speed in storage.    |
+| `autoHideDelay`      | `number`                                    | `2500`                                                                         | Inactivity delay in milliseconds before hiding controls.       |
+| `onReady` / `@ready` | `(player: MaskflowPlayer) => void`          | `undefined`                                                                    | Invoked when player instance is ready.                         |
+| `onError` / `@error` | `(err: unknown) => void`                    | `undefined`                                                                    | Invoked when a media or player error occurs.                   |
 
 ---
 
@@ -142,19 +143,19 @@ The props and options are identical across React (`onX` event props) and Vue 3 (
 
 When the player container is focused or hovered:
 
-| Shortcut         | Action                               |
-| ---------------- | ------------------------------------ |
-| `Space` or `K`   | Toggle Play / Pause                  |
-| `←` / `→`        | Seek backward / forward 5 seconds    |
-| `J` / `L`        | Seek backward / forward 10 seconds   |
-| `↑` / `↓`        | Increase / decrease volume by 5%     |
-| `M`              | Toggle Mute / Unmute                 |
-| `F`              | Toggle Fullscreen                    |
-| `C`              | Toggle Captions / Subtitles          |
-| `P`              | Toggle Picture-in-Picture            |
-| `0` – `9`        | Jump to 0% – 90% of duration         |
-| `<` / `>`        | Decrease / increase playback speed   |
-| `Escape`         | Close settings dropdown menu         |
+| Shortcut       | Action                             |
+| -------------- | ---------------------------------- |
+| `Space` or `K` | Toggle Play / Pause                |
+| `←` / `→`      | Seek backward / forward 5 seconds  |
+| `J` / `L`      | Seek backward / forward 10 seconds |
+| `↑` / `↓`      | Increase / decrease volume by 5%   |
+| `M`            | Toggle Mute / Unmute               |
+| `F`            | Toggle Fullscreen                  |
+| `C`            | Toggle Captions / Subtitles        |
+| `P`            | Toggle Picture-in-Picture          |
+| `0` – `9`      | Jump to 0% – 90% of duration       |
+| `<` / `>`      | Decrease / increase playback speed |
+| `Escape`       | Close settings dropdown menu       |
 
 ---
 

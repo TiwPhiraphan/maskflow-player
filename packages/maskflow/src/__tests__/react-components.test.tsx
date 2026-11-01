@@ -13,9 +13,7 @@ describe('MaskflowPlayer React Component', () => {
   });
 
   it('renders player container with 16:9 default aspect ratio', () => {
-    const { container } = render(
-      <MaskflowPlayer src="https://example.com/video.mp4" />,
-    );
+    const { container } = render(<MaskflowPlayer src="https://example.com/video.mp4" />);
 
     const playerEl = container.querySelector('.mf-player') as HTMLElement;
     expect(playerEl).toBeTruthy();

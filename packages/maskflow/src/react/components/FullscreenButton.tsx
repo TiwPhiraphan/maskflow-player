@@ -15,7 +15,6 @@ export const FullscreenButton: React.FC<FullscreenButtonProps> = ({ player, stat
       aria-label={state.isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
       aria-pressed={state.isFullscreen}
       onClick={() => player.toggleFullscreen()}
-      onFocus={(e) => e.currentTarget.blur()}
     >
       {state.isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
     </button>

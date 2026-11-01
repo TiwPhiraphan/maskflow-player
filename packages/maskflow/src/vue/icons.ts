@@ -103,7 +103,15 @@ export const PipIcon = (): VNode =>
     },
     [
       h('rect', { x: '2', y: '4', width: '20', height: '16', rx: '2' }),
-      h('rect', { x: '13', y: '11', width: '7', height: '6', rx: '1', fill: 'currentColor', stroke: 'none' }),
+      h('rect', {
+        x: '13',
+        y: '11',
+        width: '7',
+        height: '6',
+        rx: '1',
+        fill: 'currentColor',
+        stroke: 'none',
+      }),
     ],
   );
 
@@ -142,4 +150,3 @@ export const FullscreenExitIcon = (): VNode =>
       }),
     ],
   );
-

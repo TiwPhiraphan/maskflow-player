@@ -25,7 +25,12 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({ player, state }) =
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     setIsDragging(true);
-    e.currentTarget.setPointerCapture(e.pointerId);
+    player.lockControls(true);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
 
     const ratio = calculateRatio(e.clientX);
     player.setVolume(ratio);
@@ -38,14 +43,25 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({ player, state }) =
     }
   };
 
+  const endDrag = (target: HTMLElement, pointerId: number) => {
+    setIsDragging(false);
+    player.lockControls(false);
+    try {
+      target.releasePointerCapture(pointerId);
+    } catch {
+      // Ignore
+    }
+  };
+
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isDragging) {
-      setIsDragging(false);
-      try {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      } catch {
-        // Ignore
-      }
+      endDrag(e.currentTarget, e.pointerId);
+    }
+  };
+
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      endDrag(e.currentTarget, e.pointerId);
     }
   };
 
@@ -67,7 +83,6 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({ player, state }) =
         aria-label={isMuted ? 'Unmute' : 'Mute'}
         aria-pressed={isMuted}
         onClick={() => player.toggleMute()}
-        onFocus={(e) => e.currentTarget.blur()}
       >
         {isMuted ? <VolumeMutedIcon /> : <VolumeHighIcon />}
       </button>
@@ -85,6 +100,7 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({ player, state }) =
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
         onKeyDown={handleKeyDown}
       >
         <div className="mf-volume-rail">

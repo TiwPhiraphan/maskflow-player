@@ -70,11 +70,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
 
     const handleOutsideClick = (e: Event) => {
       const target = e.target as Node | null;
-      if (
-        containerRef.current &&
-        target &&
-        !containerRef.current.contains(target)
-      ) {
+      if (containerRef.current && target && !containerRef.current.contains(target)) {
         closeMenu(false);
       }
     };
@@ -101,7 +97,6 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={toggleMenu}
-        onFocus={(e) => e.currentTarget.blur()}
       >
         <SettingsIcon />
       </button>
@@ -164,51 +159,75 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
             </button>
             <div className="mf-shortcuts-table">
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>Space</kbd> / <kbd>k</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>Space</kbd> / <kbd>k</kbd>
+                </span>
                 <span>Play / Pause</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>←</kbd> / <kbd>→</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>←</kbd> / <kbd>→</kbd>
+                </span>
                 <span>Seek 5s</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>j</kbd> / <kbd>l</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>j</kbd> / <kbd>l</kbd>
+                </span>
                 <span>Seek 10s</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>Home</kbd> / <kbd>End</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>Home</kbd> / <kbd>End</kbd>
+                </span>
                 <span>Start / End</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>0–9</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>0–9</kbd>
+                </span>
                 <span>Jump 0%–90%</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>↑</kbd> / <kbd>↓</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>↑</kbd> / <kbd>↓</kbd>
+                </span>
                 <span>Volume ±5%</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>m</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>m</kbd>
+                </span>
                 <span>Mute</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>f</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>f</kbd>
+                </span>
                 <span>Fullscreen</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>c</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>c</kbd>
+                </span>
                 <span>Captions</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>p</kbd> / <kbd>i</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>p</kbd> / <kbd>i</kbd>
+                </span>
                 <span>Picture-in-Picture</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>&lt;</kbd> / <kbd>&gt;</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>&lt;</kbd> / <kbd>&gt;</kbd>
+                </span>
                 <span>Speed</span>
               </div>
               <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys"><kbd>,</kbd> / <kbd>.</kbd></span>
+                <span className="mf-shortcut-keys">
+                  <kbd>,</kbd> / <kbd>.</kbd>
+                </span>
                 <span>Frame (paused)</span>
               </div>
             </div>

@@ -15,7 +15,6 @@ export const PipButton: React.FC<PipButtonProps> = ({ player, state }) => {
       aria-label="Picture in Picture"
       aria-pressed={state.isPip}
       onClick={() => player.togglePip()}
-      onFocus={(e) => e.currentTarget.blur()}
     >
       <PipIcon />
     </button>
