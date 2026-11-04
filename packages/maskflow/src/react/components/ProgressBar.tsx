@@ -6,16 +6,26 @@ import { clamp } from '../../core/utils/math';
 export interface ProgressBarProps {
   player: MaskflowPlayer;
   state: PlayerState;
+  className?: string | undefined;
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state }) => {
+export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state, className = '' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragPercent, setDragPercent] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState<number | null>(null);
 
   const duration = state.duration > 0 ? state.duration : 0;
   const currentTime = state.currentTime;
-  const playedPercent = duration > 0 ? clamp((currentTime / duration) * 100, 0, 100) : 0;
+
+  // While dragging, use local state for the thumb position and ignore timeupdate
+  const activePercent =
+    isDragging && dragPercent !== null
+      ? dragPercent
+      : duration > 0
+        ? clamp((currentTime / duration) * 100, 0, 100)
+        : 0;
+
   const bufferedPercent = clamp(state.buffered * 100, 0, 100);
 
   const calculateRatio = useCallback((clientX: number): number => {
@@ -36,7 +46,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state }) => {
     }
 
     const ratio = calculateRatio(e.clientX);
-    player.seek(ratio * duration);
+    setDragPercent(ratio * 100);
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -44,30 +54,36 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state }) => {
     setHoverPosition(ratio);
 
     if (isDragging) {
-      player.seek(ratio * duration);
+      setDragPercent(ratio * 100);
     }
   };
 
-  const endDrag = (target: HTMLElement, pointerId: number) => {
+  const commitSeekAndEndDrag = (target: HTMLElement, pointerId: number, clientX?: number) => {
+    if (!isDragging) return;
+
+    let finalRatio = dragPercent !== null ? dragPercent / 100 : 0;
+    if (clientX !== undefined) {
+      finalRatio = calculateRatio(clientX);
+    }
+
+    player.seek(finalRatio * duration);
     setIsDragging(false);
+    setDragPercent(null);
     player.lockControls(false);
+
     try {
       target.releasePointerCapture(pointerId);
     } catch {
-      // Ignore if pointer capture lost
+      // Ignore
     }
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isDragging) {
-      endDrag(e.currentTarget, e.pointerId);
-    }
+    commitSeekAndEndDrag(e.currentTarget, e.pointerId, e.clientX);
   };
 
   const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isDragging) {
-      endDrag(e.currentTarget, e.pointerId);
-    }
+    commitSeekAndEndDrag(e.currentTarget, e.pointerId);
   };
 
   const handlePointerLeave = () => {
@@ -79,10 +95,10 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      player.seekBy(-5);
+      player.seekBy(-10);
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
-      player.seekBy(5);
+      player.seekBy(10);
     } else if (e.key === 'Home') {
       e.preventDefault();
       player.seek(0);
@@ -93,18 +109,20 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state }) => {
   };
 
   const hoverTime = hoverPosition !== null && duration > 0 ? hoverPosition * duration : 0;
+  const displayTime =
+    isDragging && dragPercent !== null ? (dragPercent / 100) * duration : currentTime;
 
   return (
     <div
       ref={containerRef}
-      className={`mf-progress ${isDragging ? 'mf-dragging' : ''}`}
+      className={`mf-progress ${isDragging ? 'mf-dragging' : ''} ${className}`.trim()}
       role="slider"
       tabIndex={0}
       aria-label="Seek progress"
       aria-valuemin={0}
       aria-valuemax={Math.round(duration)}
-      aria-valuenow={Math.round(currentTime)}
-      aria-valuetext={formatTime(currentTime)}
+      aria-valuenow={Math.round(displayTime)}
+      aria-valuetext={`${formatTime(displayTime)} of ${formatTime(duration)}`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -114,8 +132,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state }) => {
     >
       <div className="mf-progress-rail">
         <div className="mf-progress-buffered" style={{ width: `${bufferedPercent}%` }} />
-        <div className="mf-progress-played" style={{ width: `${playedPercent}%` }} />
-        <div className="mf-progress-thumb" style={{ left: `${playedPercent}%` }} />
+        <div className="mf-progress-played" style={{ width: `${activePercent}%` }} />
+        <div className="mf-progress-thumb" style={{ left: `${activePercent}%` }} />
       </div>
 
       {hoverPosition !== null && duration > 0 && (

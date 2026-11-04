@@ -15,6 +15,8 @@ describe('PipManager', () => {
     document.exitPictureInPicture = vi.fn().mockResolvedValue(undefined);
 
     store = createStore<PlayerState>({
+      title: '',
+      loading: false,
       status: 'idle',
       currentTime: 0,
       duration: 0,

@@ -10,7 +10,7 @@ export interface AutohideManager {
 export function createAutohideManager(
   container: HTMLElement,
   player: MaskflowPlayer,
-  delay = 2500,
+  delay = 3000,
 ): AutohideManager {
   let timer: ReturnType<typeof setTimeout> | null = null;
   let isLocked = false;
@@ -25,15 +25,17 @@ export function createAutohideManager(
   function shouldStayVisible(): boolean {
     if (isLocked) return true;
     const state = player.getState();
-    if (state.status !== 'playing') {
+    const isVideoPaused = player.video ? player.video.paused : state.status !== 'playing';
+
+    // Never hide while paused, in error, or not playing
+    if (state.error || state.status === 'error' || state.status !== 'playing' || isVideoPaused) {
       return true;
     }
 
-    // Check if focused element inside container has keyboard focus
+    // Never hide while keyboard focus is inside the controls
     const doc = typeof document !== 'undefined' ? document : null;
     const activeEl = doc?.activeElement;
     if (activeEl && container.contains(activeEl) && activeEl !== container) {
-      // An interactive child control is focused
       return true;
     }
 
@@ -77,7 +79,7 @@ export function createAutohideManager(
   };
 
   const handlePointerLeave = (e: PointerEvent) => {
-    // Never hide on touch/pen leave (fires on mobile devices every time a finger lifts!)
+    // Never hide on touch/pen leave (fires on mobile devices every time a finger lifts)
     if (e.pointerType === 'touch' || e.pointerType === 'pen') {
       return;
     }
@@ -86,7 +88,7 @@ export function createAutohideManager(
     }
   };
 
-  // Activity events
+  // Activity events: any pointer move, touch, or key press shows controls again
   container.addEventListener('pointermove', handleActivity);
   container.addEventListener('pointerdown', handlePointerDown);
   container.addEventListener('keydown', handleActivity);

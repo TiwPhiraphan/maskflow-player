@@ -102,9 +102,9 @@ function App() {
               value={theme}
               onChange={(e) => setTheme(e.target.value as 'dark' | 'light' | 'auto')}
             >
-              <option value="dark">Dark</option>
+              <option value="dark">Dark (YouTube)</option>
               <option value="light">Light</option>
-              <option value="auto">Auto</option>
+              <option value="auto">Auto (System)</option>
             </select>
           </div>
 
@@ -112,14 +112,14 @@ function App() {
             <span className="demo-label">Accent:</span>
             <input
               type="color"
+              className="demo-color"
               value={accent}
               onChange={(e) => setAccent(e.target.value)}
-              style={{ verticalAlign: 'middle', cursor: 'pointer' }}
             />
           </div>
 
           <div className="demo-group">
-            <span className="demo-label">Aspect Ratio:</span>
+            <span className="demo-label">Aspect:</span>
             <select
               className="demo-select"
               value={aspectRatio}
@@ -127,6 +127,7 @@ function App() {
             >
               <option value="16/9">16:9 (Default)</option>
               <option value="4/3">4:3</option>
+              <option value="9/16">9:16 (Shorts/Reels)</option>
               <option value="1/1">1:1</option>
               <option value="21/9">21:9</option>
             </select>
@@ -138,6 +139,7 @@ function App() {
           <MaskflowPlayer
             ref={playerRef}
             src={SOURCES[sourceKey]}
+            title={`Maskflow Stream — ${sourceKey.toUpperCase()}`}
             theme={theme}
             accent={accent}
             aspectRatio={aspectRatio}

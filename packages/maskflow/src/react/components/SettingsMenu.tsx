@@ -5,13 +5,14 @@ import { SettingsIcon } from '../icons';
 export interface SettingsMenuProps {
   player: MaskflowPlayer;
   state: PlayerState;
+  className?: string | undefined;
 }
 
 type MenuView = 'main' | 'speed' | 'quality' | 'shortcuts';
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 
-export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => {
+export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<MenuView>('main');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,6 +38,20 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
       triggerRef.current?.focus();
     }
   };
+
+  // Listen for 's' shortcut to toggle settings
+  useEffect(() => {
+    return player.events.on('togglesettings', () => {
+      setIsOpen((prev) => {
+        const next = !prev;
+        player.lockControls(next);
+        if (!next) {
+          setCurrentView('main');
+        }
+        return next;
+      });
+    });
+  }, [player]);
 
   // Listen for '?' shortcut to toggle shortcuts menu
   useEffect(() => {
@@ -86,14 +101,16 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
 
   const qualities = state.qualities;
   const hasQualities = qualities.length > 0;
+  const label = 'Settings (s)';
 
   return (
-    <div ref={containerRef} className="mf-settings-container">
+    <div ref={containerRef} className={`mf-settings-container ${className}`.trim()}>
       <button
         ref={triggerRef}
         type="button"
-        className="mf-btn"
-        aria-label="Settings"
+        className="mf-btn mf-btn-settings"
+        title={label}
+        aria-label={label}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={toggleMenu}
@@ -160,7 +177,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
             <div className="mf-shortcuts-table">
               <div className="mf-shortcut-row">
                 <span className="mf-shortcut-keys">
-                  <kbd>Space</kbd> / <kbd>k</kbd>
+                  <kbd>Space</kbd>
                 </span>
                 <span>Play / Pause</span>
               </div>
@@ -168,13 +185,43 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
                 <span className="mf-shortcut-keys">
                   <kbd>←</kbd> / <kbd>→</kbd>
                 </span>
-                <span>Seek 5s</span>
+                <span>Seek ±10s</span>
               </div>
               <div className="mf-shortcut-row">
                 <span className="mf-shortcut-keys">
-                  <kbd>j</kbd> / <kbd>l</kbd>
+                  <kbd>s</kbd>
                 </span>
-                <span>Seek 10s</span>
+                <span>Toggle settings</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys">
+                  <kbd>f</kbd>
+                </span>
+                <span>Fullscreen</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys">
+                  <kbd>m</kbd>
+                </span>
+                <span>Mute</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys">
+                  <kbd>↑</kbd> / <kbd>↓</kbd>
+                </span>
+                <span>Volume ±5%</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys">
+                  <kbd>p</kbd>
+                </span>
+                <span>Picture-in-Picture</span>
+              </div>
+              <div className="mf-shortcut-row">
+                <span className="mf-shortcut-keys">
+                  <kbd>Esc</kbd>
+                </span>
+                <span>Close settings</span>
               </div>
               <div className="mf-shortcut-row">
                 <span className="mf-shortcut-keys">
@@ -187,48 +234,6 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state }) => 
                   <kbd>0–9</kbd>
                 </span>
                 <span>Jump 0%–90%</span>
-              </div>
-              <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys">
-                  <kbd>↑</kbd> / <kbd>↓</kbd>
-                </span>
-                <span>Volume ±5%</span>
-              </div>
-              <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys">
-                  <kbd>m</kbd>
-                </span>
-                <span>Mute</span>
-              </div>
-              <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys">
-                  <kbd>f</kbd>
-                </span>
-                <span>Fullscreen</span>
-              </div>
-              <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys">
-                  <kbd>c</kbd>
-                </span>
-                <span>Captions</span>
-              </div>
-              <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys">
-                  <kbd>p</kbd> / <kbd>i</kbd>
-                </span>
-                <span>Picture-in-Picture</span>
-              </div>
-              <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys">
-                  <kbd>&lt;</kbd> / <kbd>&gt;</kbd>
-                </span>
-                <span>Speed</span>
-              </div>
-              <div className="mf-shortcut-row">
-                <span className="mf-shortcut-keys">
-                  <kbd>,</kbd> / <kbd>.</kbd>
-                </span>
-                <span>Frame (paused)</span>
               </div>
             </div>
           </div>

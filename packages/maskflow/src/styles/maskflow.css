@@ -1,5 +1,6 @@
 /**
  * maskflow.css — YouTube-Style Modern Video Player Stylesheet
+ * 3-Row Grid Layout (Top, Center, Bottom) with Scrims & Safe Areas
  */
 
 :root {
@@ -13,7 +14,12 @@
     rgba(0, 0, 0, 0.15) 80%,
     transparent 100%
   );
-  --mf-bg-scrim-top: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  --mf-bg-scrim-top: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.35) 60%,
+    transparent 100%
+  );
   --mf-bg-panel: rgba(28, 28, 28, 0.96);
   --mf-text: #ffffff;
   --mf-text-muted: #aaaaaa;
@@ -21,7 +27,7 @@
   --mf-radius-panel: 12px;
   --mf-radius-sm: 4px;
   --mf-aspect-ratio: 16 / 9;
-  --mf-transition: 150ms cubic-bezier(0.2, 0, 0, 1);
+  --mf-transition: 180ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 [data-theme='light'] {
@@ -37,7 +43,7 @@
 }
 
 /* ==========================================================================
-   Root Player Container (Container Queries & Aspect Ratio)
+   Root Player Container
    ========================================================================== */
 
 .mf-player {
@@ -75,7 +81,13 @@
   box-sizing: border-box;
 }
 
-/* Native Fullscreen (Desktop & Mobile) */
+/* Fullscreen: hide cursor when controls are hidden */
+.mf-player.mf-fullscreen.mf-controls-hidden,
+.mf-player.mf-fullscreen.mf-controls-hidden * {
+  cursor: none !important;
+}
+
+/* Native Fullscreen API */
 .mf-player:fullscreen,
 .mf-player:-webkit-full-screen,
 .mf-player:-moz-full-screen,
@@ -86,10 +98,9 @@
   max-width: none !important;
   max-height: none !important;
   border-radius: 0 !important;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Fallback simulated fullscreen when native fullscreen API is unavailable */
+/* Fallback simulated fullscreen */
 .mf-player.mf-fullscreen:not(:fullscreen):not(:-webkit-full-screen) {
   position: fixed !important;
   top: 0 !important;
@@ -100,10 +111,9 @@
   max-width: none !important;
   max-height: none !important;
   border-radius: 0 !important;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Video Element - Crucial: pointer-events: none ensures touches pass through to player container */
+/* Video Element */
 .mf-video {
   position: absolute;
   top: 0;
@@ -115,21 +125,123 @@
   pointer-events: none;
 }
 
-/* Glass surface fallback / legacy class (transparent overlay) */
+/* Glass fallback utility */
 .mf-glass {
   border: none;
   box-shadow: none;
 }
 
 /* ==========================================================================
-   Center Big Play / Pause Button (YouTube Style)
+   Controls Overlay (3-Row CSS Grid: Top, Center, Bottom)
    ========================================================================== */
 
-.mf-big-play {
+.mf-controls-wrapper {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(1);
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity var(--mf-transition);
+}
+
+.mf-controls-hidden .mf-controls-wrapper {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* On error: turns solid black */
+.mf-player.mf-error .mf-controls-wrapper {
+  background: #000000 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.mf-player.mf-error .mf-bottom-bar,
+.mf-player.mf-error .mf-seek-zone,
+.mf-player.mf-error .mf-center-action {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Top Row: Title + Settings Button
+   ========================================================================== */
+
+.mf-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--mf-bg-scrim-top);
+  padding: max(10px, env(safe-area-inset-top, 10px)) max(14px, env(safe-area-inset-right, 14px))
+    14px max(14px, env(safe-area-inset-left, 14px));
+  pointer-events: auto;
+  gap: 12px;
+  min-height: 48px;
+}
+
+.mf-title {
+  flex: 1 1 0%;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.mf-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   Center Row: Seek Zones (Left & Right) & Big Center Button
+   ========================================================================== */
+
+.mf-center-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.mf-seek-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(50% - 44px);
+  pointer-events: auto;
+  touch-action: manipulation;
+  z-index: 1;
+}
+
+.mf-seek-zone-left {
+  left: 0;
+}
+
+.mf-seek-zone-right {
+  right: 0;
+}
+
+.mf-center-action {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  pointer-events: auto;
+}
+
+/* Big Center Play / Pause / Replay Button */
+.mf-big-play {
   width: 68px;
   height: 68px;
   border-radius: 50%;
@@ -137,7 +249,6 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 4;
   border: none;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
@@ -145,15 +256,14 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   transition:
     transform var(--mf-transition),
-    background var(--mf-transition),
-    opacity var(--mf-transition);
+    background var(--mf-transition);
   color: #ffffff;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
 .mf-big-play:hover {
-  transform: translate(-50%, -50%) scale(1.1);
+  transform: scale(1.1);
   background: var(--mf-accent-solid, #ff0000);
   box-shadow: 0 0 24px var(--mf-accent-glow);
 }
@@ -162,174 +272,52 @@
   width: 32px;
   height: 32px;
   fill: currentColor;
+}
+
+.mf-big-play:not(.mf-playing) svg {
   margin-left: 3px;
 }
 
-/* Crucial: Completely hide Big Play Button whenever player is playing */
-.mf-playing .mf-big-play {
-  display: none !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  visibility: hidden !important;
+.mf-big-play.mf-playing svg {
+  margin-left: 0;
 }
 
-/* ==========================================================================
-   Bottom Controls Bar (YouTube Scrim Overlay)
-   ========================================================================== */
-
-.mf-controls {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  padding: 0 14px 6px 14px;
-  border-radius: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  background: var(--mf-bg-scrim);
-  z-index: 10;
-  border: none;
+.mf-big-play-loading {
+  background: rgba(0, 0, 0, 0.4);
   box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  transition:
-    opacity var(--mf-transition),
-    transform var(--mf-transition);
-}
-
-.mf-controls-hidden .mf-controls {
-  opacity: 0;
+  cursor: default;
   pointer-events: none;
-  transform: translateY(6px);
 }
 
-.mf-controls-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 40px;
-}
-
-.mf-controls-left,
-.mf-controls-right {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+.mf-big-play-loading:hover {
+  transform: none;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: none;
 }
 
 /* ==========================================================================
-   Progress Bar (YouTube Scrub Bar)
+   Bottom Row: Flex Row of 7 Controls
+   1. Play/pause (desktop)
+   2. Volume control (slider desktop)
+   3. Current time
+   4. Progress bar (flex-1)
+   5. Duration
+   6. PiP (desktop)
+   7. Fullscreen
    ========================================================================== */
 
-.mf-progress {
-  position: relative;
-  width: 100%;
-  height: 18px;
+.mf-bottom-bar {
   display: flex;
   align-items: center;
-  cursor: pointer;
-  touch-action: none;
-  margin-bottom: 2px;
+  gap: 8px;
+  background: var(--mf-bg-scrim);
+  padding: 10px max(14px, env(safe-area-inset-right, 14px))
+    max(10px, env(safe-area-inset-bottom, 10px)) max(14px, env(safe-area-inset-left, 14px));
+  pointer-events: auto;
+  min-height: 48px;
 }
 
-/* Expanded touch hit area for mobile/touch usability */
-.mf-progress::before {
-  content: '';
-  position: absolute;
-  top: -12px;
-  bottom: -12px;
-  left: 0;
-  right: 0;
-  z-index: 1;
-}
-
-.mf-progress-rail {
-  position: relative;
-  width: 100%;
-  height: 3px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.2);
-  overflow: visible;
-  transition: height var(--mf-transition);
-}
-
-.mf-progress:hover .mf-progress-rail,
-.mf-progress.mf-dragging .mf-progress-rail {
-  height: 5px;
-}
-
-.mf-progress-buffered {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.4);
-  pointer-events: none;
-}
-
-.mf-progress-played {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  border-radius: 2px;
-  background: var(--mf-accent-solid, #ff0000);
-  pointer-events: none;
-}
-
-.mf-progress-thumb {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: var(--mf-accent-solid, #ff0000);
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
-  pointer-events: none;
-  transition: transform var(--mf-transition);
-  z-index: 2;
-}
-
-.mf-progress:hover .mf-progress-thumb,
-.mf-progress.mf-dragging .mf-progress-thumb {
-  transform: translate(-50%, -50%) scale(1);
-}
-
-/* On touchscreens, thumb is always visible so user knows seek position */
-@media (pointer: coarse) {
-  .mf-progress-thumb {
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-/* Hover Tooltip */
-.mf-tooltip {
-  position: absolute;
-  bottom: 26px;
-  transform: translateX(-50%);
-  padding: 3px 8px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  border-radius: var(--mf-radius-sm, 4px);
-  background: rgba(28, 28, 28, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  pointer-events: none;
-  white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-  z-index: 3;
-}
-
-/* ==========================================================================
-   Control Buttons
-   ========================================================================== */
-
+/* Control Buttons */
 .mf-btn {
   background: transparent;
   border: none;
@@ -350,6 +338,7 @@
     color var(--mf-transition);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
 }
 
 .mf-btn:hover {
@@ -377,17 +366,18 @@
   color: var(--mf-accent-solid, #ff0000);
 }
 
-/* Time Display */
+/* Time Display: mm:ss (no hours) */
 .mf-time {
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   color: var(--mf-text);
-  padding: 0 8px;
+  padding: 0 4px;
   white-space: nowrap;
   line-height: 1;
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .mf-time-separator {
@@ -396,13 +386,121 @@
 }
 
 /* ==========================================================================
-   Volume Slider (YouTube Hover Slide-out)
+   Custom Progress Bar (Flex-1)
+   ========================================================================== */
+
+.mf-progress {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* Expanded hit area */
+.mf-progress::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  bottom: -12px;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.mf-progress-rail {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: visible;
+  transition: height var(--mf-transition);
+}
+
+.mf-progress:hover .mf-progress-rail,
+.mf-progress.mf-dragging .mf-progress-rail {
+  height: 6px;
+}
+
+.mf-progress-buffered {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+}
+
+.mf-progress-played {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--mf-accent-solid, #ff0000);
+  pointer-events: none;
+}
+
+.mf-progress-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--mf-accent-solid, #ff0000);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  transition: transform var(--mf-transition);
+  z-index: 2;
+}
+
+.mf-progress:hover .mf-progress-thumb,
+.mf-progress.mf-dragging .mf-progress-thumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Touchscreens: thumb is always visible */
+@media (pointer: coarse) {
+  .mf-progress-thumb {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Hover Tooltip */
+.mf-tooltip {
+  position: absolute;
+  bottom: 28px;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--mf-radius-sm, 4px);
+  background: rgba(28, 28, 28, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  z-index: 3;
+}
+
+/* ==========================================================================
+   Volume Slider (Desktop Only)
    ========================================================================== */
 
 .mf-volume-container {
   display: flex;
   align-items: center;
   position: relative;
+  flex-shrink: 0;
 }
 
 .mf-volume-slider {
@@ -450,7 +548,7 @@
 }
 
 /* ==========================================================================
-   Settings Menu / Dropdown & Bottom Sheet
+   Settings Menu: Popover (Desktop) & Bottom Sheet (Mobile)
    ========================================================================== */
 
 .mf-settings-container {
@@ -458,9 +556,10 @@
   display: inline-flex;
 }
 
+/* Desktop Popover anchored to Settings Button in Top Row */
 .mf-menu {
   position: absolute;
-  bottom: 52px;
+  top: calc(100% + 8px);
   right: 0;
   min-width: 210px;
   border-radius: 8px;
@@ -469,14 +568,14 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
   gap: 1px;
-  z-index: 20;
+  z-index: 50;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(8px) scale(0.98);
+  transform: translateY(-8px) scale(0.98);
   transition:
     opacity var(--mf-transition),
     transform var(--mf-transition);
@@ -529,7 +628,7 @@
   padding-bottom: 10px;
 }
 
-/* Shortcuts View in Settings Menu */
+/* Shortcuts view in settings */
 .mf-shortcuts-view {
   display: flex;
   flex-direction: column;
@@ -589,7 +688,7 @@
 }
 
 /* ==========================================================================
-   Double Tap & Seek Ripple Indicator (YouTube Stacked Style)
+   Double Tap / Seek Ripple Feedback Overlay (Stacked Style)
    ========================================================================== */
 
 .mf-seek-flash {
@@ -603,7 +702,7 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity 160ms ease-out;
-  z-index: 5;
+  z-index: 6;
 }
 
 .mf-seek-flash.mf-seek-left {
@@ -678,133 +777,128 @@
   white-space: nowrap;
 }
 
-.mf-seek-flash-icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
 /* ==========================================================================
-   Loading Spinner & Error Overlay
+   Loading Spinner
    ========================================================================== */
 
 .mf-spinner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: 4px solid rgba(255, 255, 255, 0.2);
   border-top-color: var(--mf-accent-solid, #ff0000);
   animation: mf-spin 0.8s linear infinite;
   pointer-events: none;
-  z-index: 6;
 }
 
 @keyframes mf-spin {
   to {
-    transform: translate(-50%, -50%) rotate(360deg);
+    transform: rotate(360deg);
   }
 }
+
+/* ==========================================================================
+   Error Screen with Retry
+   Solid black background, error icon, short message, retry button
+   ========================================================================== */
 
 .mf-error-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(10, 10, 15, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: #000000;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   padding: 24px;
   text-align: center;
-  z-index: 5;
+  z-index: 4;
+  pointer-events: auto;
+}
+
+.mf-error-icon {
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mf-error-msg {
   color: #f87171;
   font-size: 0.95rem;
   max-width: 420px;
+  line-height: 1.4;
 }
 
 .mf-error-retry {
   width: auto !important;
-  padding: 8px 18px !important;
+  padding: 8px 22px !important;
   border-radius: var(--mf-radius-sm, 4px) !important;
   font-weight: 600 !important;
+  font-size: 0.9rem !important;
   background: #ffffff !important;
   color: #111111 !important;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.mf-error-retry:hover {
+  background: #eeeeee !important;
+  color: #000000 !important;
 }
 
 /* ==========================================================================
-   Container Query Breakpoints (<480px, <380px, 480-768px, >768px)
+   Responsive & Container Queries (Desktop >= 768px vs Mobile < 768px)
+   Mobile touch targets at least 44x44px
+   No horizontal overflow down to 320px
    ========================================================================== */
 
-@container mf-player (max-width: 480px) {
-  .mf-volume-slider {
+@container mf-player (max-width: 767px) {
+  /* Desktop-only items hidden on mobile */
+  .mf-desktop-only {
     display: none !important;
   }
 
-  .mf-time {
-    font-size: 0.75rem;
-    padding: 0 4px;
-  }
-
-  .mf-controls {
-    padding: 0 8px 6px 8px;
-  }
-
-  .mf-progress {
-    height: 22px;
-    margin-bottom: 2px;
-  }
-
-  .mf-progress-rail {
-    height: 4px;
-  }
-
-  .mf-progress-thumb {
-    transform: translate(-50%, -50%) scale(1);
-    width: 14px;
-    height: 14px;
-  }
-
+  /* Mobile touch targets: at least 44x44px */
   .mf-btn {
-    min-width: 38px;
-    min-height: 38px;
-    width: 38px;
-    height: 38px;
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
   }
 
-  .mf-btn svg {
-    width: 20px;
-    height: 20px;
+  .mf-time {
+    font-size: 0.76rem;
+    padding: 0 2px;
   }
 
+  .mf-bottom-bar {
+    gap: 4px;
+    padding: 8px max(8px, env(safe-area-inset-right, 8px))
+      max(8px, env(safe-area-inset-bottom, 8px)) max(8px, env(safe-area-inset-left, 8px));
+  }
+
+  /* Mobile Settings Bottom Sheet */
   .mf-settings-container {
     position: static;
   }
 
-  /* Bottom sheet style for settings menu on compact screens */
   .mf-menu {
     position: absolute;
+    top: auto;
     bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
     border-radius: 16px 16px 0 0;
-    padding: 12px 8px;
+    padding: 14px 8px;
     background: rgba(28, 28, 28, 0.98);
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.8);
     transform: translateY(100%);
-    max-height: 85%;
+    max-height: 80%;
     overflow-y: auto;
     z-index: 100;
   }
@@ -814,15 +908,20 @@
   }
 }
 
-@container mf-player (max-width: 380px) {
-  .mf-btn[aria-label*='Picture' i],
-  .mf-btn[aria-label*='pip' i] {
+/* Media query fallback when container queries unsupported */
+@media (max-width: 767px) {
+  .mf-desktop-only {
     display: none !important;
   }
+}
 
+/* Extremely narrow screens (320px width) */
+@container mf-player (max-width: 360px) {
   .mf-time {
     font-size: 0.72rem;
-    padding: 0 2px;
+  }
+  .mf-bottom-bar {
+    gap: 2px;
   }
 }
 
@@ -832,11 +931,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mf-player *,
-  .mf-controls,
+  .mf-controls-wrapper,
   .mf-big-play,
   .mf-menu,
   .mf-progress-rail,
-  .mf-progress-thumb {
+  .mf-progress-thumb,
+  .mf-seek-flash-content {
     transition: none !important;
     animation: none !important;
   }

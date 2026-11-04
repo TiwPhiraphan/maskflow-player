@@ -12,6 +12,8 @@ describe('PersistenceManager', () => {
     events = createEventEmitter<PlayerEvents>();
 
     const mockState: PlayerState = {
+      title: '',
+      loading: false,
       status: 'idle',
       currentTime: 0,
       duration: 0,

@@ -18,7 +18,7 @@ export function createKeyboardManager(
     if (!target) return false;
     const tagName = target.tagName.toLowerCase();
     return (
-      tagName === 'input' ||
+      (tagName === 'input' && (target as HTMLInputElement).type !== 'range') ||
       tagName === 'textarea' ||
       tagName === 'select' ||
       target.isContentEditable
@@ -28,6 +28,11 @@ export function createKeyboardManager(
   function handleKeyDown(event: KeyboardEvent): void {
     if (!isEnabled) return;
     if (isInputFocused(event)) return;
+
+    // Ignore events with modifier keys (ctrl, meta, alt) per spec
+    if (event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
 
     // Check if event is on the container or container is focused/hovered
     const currentTarget = event.currentTarget as HTMLElement | null;
@@ -47,7 +52,26 @@ export function createKeyboardManager(
       return;
     }
 
+    const target = event.target as HTMLElement | null;
+    const isButton = target?.tagName === 'BUTTON' || target?.getAttribute('role') === 'button';
+    const isSlider =
+      (target?.tagName === 'INPUT' && (target as HTMLInputElement).type === 'range') ||
+      target?.getAttribute('role') === 'slider';
+
     const key = event.key;
+
+    // Check if target element handles this key natively
+    if (isButton && (key === ' ' || key === 'Enter')) {
+      // Button handles activation natively; return to avoid double-toggle
+      return;
+    }
+    if (
+      isSlider &&
+      (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown')
+    ) {
+      // Slider handles arrow keys natively
+      return;
+    }
 
     switch (key) {
       case ' ':
@@ -58,21 +82,13 @@ export function createKeyboardManager(
         break;
 
       case 'ArrowLeft':
-        event.preventDefault();
-        player.seekBy(-5);
-        break;
-
-      case 'ArrowRight':
-        event.preventDefault();
-        player.seekBy(5);
-        break;
-
       case 'j':
       case 'J':
         event.preventDefault();
         player.seekBy(-10);
         break;
 
+      case 'ArrowRight':
       case 'l':
       case 'L':
         event.preventDefault();
@@ -101,10 +117,10 @@ export function createKeyboardManager(
         player.toggleFullscreen();
         break;
 
-      case 'c':
-      case 'C':
+      case 's':
+      case 'S':
         event.preventDefault();
-        player.toggleCaptions();
+        player.events.emit('togglesettings', undefined);
         break;
 
       case 'p':
@@ -113,6 +129,17 @@ export function createKeyboardManager(
       case 'I':
         event.preventDefault();
         player.togglePip();
+        break;
+
+      case 'Escape':
+        event.preventDefault();
+        player.events.emit('togglesettings', undefined);
+        break;
+
+      case 'c':
+      case 'C':
+        event.preventDefault();
+        player.toggleCaptions();
         break;
 
       case 'Home':

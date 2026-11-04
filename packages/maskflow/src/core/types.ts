@@ -12,6 +12,8 @@ export interface QualityLevel {
 }
 
 export interface PlayerState {
+  title?: string | undefined;
+  loading: boolean;
   status: PlayerStatus;
   currentTime: number;
   duration: number;
@@ -55,6 +57,7 @@ export interface PlayerEvents {
   captionschange: boolean;
   doubletap: DoubleTapEvent;
   toggleshortcuts: void;
+  togglesettings: void;
   ready: void;
   destroy: void;
 }
@@ -79,6 +82,7 @@ export type PlayerSource = string | MediaSourceItem[];
 
 export interface PlayerOptions {
   src: PlayerSource;
+  title?: string | undefined;
   poster?: string | undefined;
   tracks?: MediaTrackItem[] | undefined;
   autoPlay?: boolean | undefined;
@@ -106,6 +110,7 @@ export interface MaskflowPlayer {
   readonly container: HTMLElement;
 
   getState(): PlayerState;
+  setTitle(title: string): void;
   play(): Promise<void>;
   pause(): void;
   toggle(): Promise<void>;

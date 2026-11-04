@@ -150,3 +150,48 @@ export const FullscreenExitIcon = (): VNode =>
       }),
     ],
   );
+
+export const ReplayIcon = (): VNode =>
+  h(
+    'svg',
+    {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      strokeWidth: '2',
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+    },
+    [
+      h('polyline', { points: '1 4 1 10 7 10' }),
+      h('path', { d: 'M3.51 15a9 9 0 1 0 2.13-9.36L1 10' }),
+    ],
+  );
+
+export const ErrorIcon = (): VNode =>
+  h(
+    'svg',
+    {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      strokeWidth: '2',
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+    },
+    [
+      h('circle', { cx: '12', cy: '12', r: '10' }),
+      h('line', { x1: '12', y1: '8', x2: '12', y2: '12' }),
+      h('line', { x1: '12', y1: '16', x2: '12.01', y2: '16' }),
+    ],
+  );
+
+export const SeekBackwardIcon = (): VNode =>
+  h('svg', { viewBox: '0 0 24 24', fill: 'currentColor' }, [
+    h('path', { d: 'M12 6v12l-6-6 6-6zm6 0v12l-6-6 6-6z' }),
+  ]);
+
+export const SeekForwardIcon = (): VNode =>
+  h('svg', { viewBox: '0 0 24 24', fill: 'currentColor' }, [
+    h('path', { d: 'M6 6v12l6-6-6-6zm6 0v12l6-6-6-6z' }),
+  ]);

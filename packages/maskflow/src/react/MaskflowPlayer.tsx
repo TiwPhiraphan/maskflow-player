@@ -4,8 +4,9 @@ import type { MaskflowPlayer as IMaskflowPlayer, PlayerOptions } from '../core/t
 import { useMaskflow } from './useMaskflow';
 import { BigPlayButton } from './components/BigPlayButton';
 import { ControlBar } from './components/ControlBar';
-import { Spinner } from './components/Spinner';
+import { SettingsMenu } from './components/SettingsMenu';
 import { ErrorOverlay } from './components/ErrorOverlay';
+import { SeekBackwardIcon, SeekForwardIcon } from './icons';
 
 export interface MaskflowPlayerProps extends PlayerOptions {
   className?: string | undefined;
@@ -15,19 +16,20 @@ export interface MaskflowPlayerProps extends PlayerOptions {
 export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((props, ref) => {
   const {
     src,
+    title,
     poster,
     tracks,
     autoPlay = false,
     muted = false,
     loop = false,
-    controls,
+    controls = ['play', 'progress', 'time', 'volume', 'settings', 'pip', 'fullscreen'],
     theme = 'dark',
     accent,
     keyboard = true,
     gestures = true,
     persist = false,
     aspectRatio = '16/9',
-    autoHideDelay = 2500,
+    autoHideDelay = 3000,
     qualities,
     className = '',
     style = {},
@@ -39,7 +41,7 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
   const videoRef = useRef<HTMLVideoElement>(null);
   const [player, setPlayer] = useState<IMaskflowPlayer | null>(null);
 
-  // Double-tap visual feedback state
+  // Double-tap visual feedback state (stacked: +10s, +20s, +30s...)
   const [seekFlash, setSeekFlash] = useState<{
     active: boolean;
     side: 'left' | 'right' | 'center';
@@ -47,8 +49,6 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
   }>({ active: false, side: 'center', seconds: 10 });
 
   const seekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const accumulatedSecondsRef = useRef<number>(0);
-  const lastSeekSideRef = useRef<'left' | 'right' | 'center'>('center');
 
   // Core Player Initialization (Strict Mode Safe)
   useEffect(() => {
@@ -58,6 +58,7 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
 
     const playerInstance = createPlayer(videoEl, {
       src,
+      title,
       poster,
       tracks,
       autoPlay,
@@ -81,26 +82,21 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
 
     // Listen for seek / double-tap to trigger stacked visual flash animation
     const unsubDoubleTap = playerInstance.events.on('doubletap', (data) => {
-      if (data.side === 'center') return;
-      const absDelta = Math.abs(data.delta ?? 10);
-      if (lastSeekSideRef.current === data.side && accumulatedSecondsRef.current > 0) {
-        accumulatedSecondsRef.current += absDelta;
-      } else {
-        accumulatedSecondsRef.current = absDelta;
-        lastSeekSideRef.current = data.side;
+      if (data.side === 'center') {
+        setSeekFlash((prev) => ({ ...prev, active: false }));
+        return;
       }
-
+      const absDelta = Math.abs(data.delta ?? 10);
       setSeekFlash({
         active: true,
         side: data.side,
-        seconds: accumulatedSecondsRef.current,
+        seconds: absDelta,
       });
 
       if (seekTimerRef.current) clearTimeout(seekTimerRef.current);
       seekTimerRef.current = setTimeout(() => {
         setSeekFlash((prev) => ({ ...prev, active: false }));
-        accumulatedSecondsRef.current = 0;
-      }, 750);
+      }, 1000);
     });
 
     return () => {
@@ -135,16 +131,20 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
 
   const isVideoPlaying =
     state.status === 'playing' || (player?.video && !player.video.paused && !player.video.ended);
+  const isError = state.status === 'error';
 
   const containerClasses = [
     'mf-player',
     isVideoPlaying ? 'mf-playing' : '',
     state.isFullscreen ? 'mf-fullscreen' : '',
-    !state.controlsVisible ? 'mf-controls-hidden' : '',
+    !state.controlsVisible && !isError ? 'mf-controls-hidden' : '',
+    isError ? 'mf-error' : '',
     className,
   ]
     .filter(Boolean)
     .join(' ');
+
+  const isEnabled = (name: string) => controls.includes(name);
 
   return (
     <div ref={containerRef} className={containerClasses} data-theme={theme} style={mergedStyle}>
@@ -159,28 +159,42 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
         >
           <div key={seekFlash.seconds} className="mf-seek-flash-content">
             <div className="mf-seek-flash-arrows">
-              {seekFlash.side === 'left' ? (
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-                  <path d="M12 6v12l-6-6 6-6zm6 0v12l-6-6 6-6z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-                  <path d="M6 6v12l6-6-6-6zm6 0v12l6-6-6-6z" />
-                </svg>
-              )}
+              {seekFlash.side === 'left' ? <SeekBackwardIcon /> : <SeekForwardIcon />}
             </div>
-            <div className="mf-seek-flash-text">{seekFlash.seconds} seconds</div>
+            <div className="mf-seek-flash-text">
+              {seekFlash.side === 'left' ? `-${seekFlash.seconds}s` : `+${seekFlash.seconds}s`}
+            </div>
           </div>
         </div>
       )}
 
       {player && (
-        <>
-          <BigPlayButton player={player} state={state} />
-          <Spinner state={state} />
-          <ErrorOverlay player={player} state={state} />
+        <div className="mf-controls-wrapper">
+          {/* Top Row: Video title (flex-1) + Settings */}
+          <div className="mf-top-bar">
+            <div className="mf-title" title={title || state.title || ''}>
+              {title || state.title || ''}
+            </div>
+            <div className="mf-top-actions">
+              {isEnabled('settings') && <SettingsMenu player={player} state={state} />}
+            </div>
+          </div>
+
+          {/* Center Row: Seek Zones (Left & Right, non-overlapping) + Center Big Button */}
+          <div className="mf-center-row">
+            <div className="mf-seek-zone mf-seek-zone-left" aria-hidden="true" />
+            <div className="mf-center-action">
+              <BigPlayButton player={player} state={state} />
+            </div>
+            <div className="mf-seek-zone mf-seek-zone-right" aria-hidden="true" />
+          </div>
+
+          {/* Bottom Row: 7 controls in flex row */}
           <ControlBar player={player} state={state} controls={controls} />
-        </>
+
+          {/* Error Screen (Solid black overlay, top row stays visible, bottom row hidden) */}
+          <ErrorOverlay player={player} state={state} />
+        </div>
       )}
     </div>
   );

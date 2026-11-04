@@ -20,28 +20,29 @@ describe('Utils', () => {
   });
 
   describe('formatTime', () => {
-    it('formats seconds correctly', () => {
-      expect(formatTime(0)).toBe('0:00');
-      expect(formatTime(5)).toBe('0:05');
-      expect(formatTime(59)).toBe('0:59');
+    it('formats seconds correctly in mm:ss format', () => {
+      expect(formatTime(0)).toBe('00:00');
+      expect(formatTime(5)).toBe('00:05');
+      expect(formatTime(59)).toBe('00:59');
     });
 
-    it('formats minutes correctly', () => {
-      expect(formatTime(60)).toBe('1:00');
-      expect(formatTime(75)).toBe('1:15');
+    it('formats minutes correctly in mm:ss format', () => {
+      expect(formatTime(60)).toBe('01:00');
+      expect(formatTime(75)).toBe('01:15');
       expect(formatTime(600)).toBe('10:00');
     });
 
-    it('formats hours correctly', () => {
-      expect(formatTime(3600)).toBe('1:00:00');
-      expect(formatTime(3665)).toBe('1:01:05');
-      expect(formatTime(72000)).toBe('20:00:00');
+    it('never renders hours and keeps counting minutes (e.g. 75:03)', () => {
+      expect(formatTime(3600)).toBe('60:00');
+      expect(formatTime(3665)).toBe('61:05');
+      expect(formatTime(4503)).toBe('75:03');
+      expect(formatTime(72000)).toBe('1200:00');
     });
 
     it('handles invalid numbers gracefully', () => {
-      expect(formatTime(-10)).toBe('0:00');
-      expect(formatTime(NaN)).toBe('0:00');
-      expect(formatTime(Infinity)).toBe('0:00');
+      expect(formatTime(-10)).toBe('00:00');
+      expect(formatTime(NaN)).toBe('00:00');
+      expect(formatTime(Infinity)).toBe('00:00');
     });
   });
 });

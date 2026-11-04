@@ -2,6 +2,8 @@ import { shallowRef, onScopeDispose, watch, type Ref } from 'vue';
 import type { MaskflowPlayer, PlayerState } from '../core/types';
 
 export const defaultPlayerState: PlayerState = {
+  title: '',
+  loading: false,
   status: 'idle',
   currentTime: 0,
   duration: 0,

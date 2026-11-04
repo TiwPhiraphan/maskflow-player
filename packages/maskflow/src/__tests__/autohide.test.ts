@@ -15,6 +15,8 @@ describe('AutohideManager', () => {
     events = createEventEmitter<PlayerEvents>();
 
     const mockState: PlayerState = {
+      title: '',
+      loading: false,
       status: 'playing',
       currentTime: 10,
       duration: 100,

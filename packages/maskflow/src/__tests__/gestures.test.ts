@@ -33,6 +33,8 @@ describe('GestureManager', () => {
     events = createEventEmitter<PlayerEvents>();
 
     mockState = {
+      title: '',
+      loading: false,
       status: 'playing',
       currentTime: 30,
       duration: 100,
@@ -88,7 +90,7 @@ describe('GestureManager', () => {
     firePointer(500, 250);
     expect(mockPlayer.setControlsVisible).not.toHaveBeenCalled();
 
-    // Advance past single-tap timer
+    // Advance past single-tap timer (~250ms)
     vi.advanceTimersByTime(300);
     expect(mockPlayer.setControlsVisible).toHaveBeenCalledWith(false);
 
@@ -102,7 +104,6 @@ describe('GestureManager', () => {
     firePointer(500, 250);
     expect(mockPlayer.setControlsVisible).not.toHaveBeenCalled();
 
-    // Advance past single-tap timer
     vi.advanceTimersByTime(300);
     expect(mockPlayer.setControlsVisible).toHaveBeenCalledWith(true);
 
@@ -139,6 +140,39 @@ describe('GestureManager', () => {
 
     expect(mockPlayer.seekBy).toHaveBeenCalledWith(10);
     expect(onDoubleTap).toHaveBeenCalledWith({ side: 'right', delta: 10 });
+
+    manager.destroy();
+  });
+
+  it('accumulates seek stack (+10s, +20s) with single tap while in seek mode', () => {
+    const manager = createGestureManager(target, mockPlayer);
+    const onDoubleTap = vi.fn();
+    events.on('doubletap', onDoubleTap);
+
+    // Double tap right to enter seek mode
+    firePointer(850, 250);
+    vi.advanceTimersByTime(50);
+    firePointer(855, 250);
+    expect(onDoubleTap).toHaveBeenLastCalledWith({ side: 'right', delta: 10 });
+
+    // Single tap while in seek mode adds another 10s to the stack (+20s)
+    vi.advanceTimersByTime(200);
+    firePointer(860, 250);
+    expect(mockPlayer.seekBy).toHaveBeenLastCalledWith(10);
+    expect(onDoubleTap).toHaveBeenLastCalledWith({ side: 'right', delta: 20 });
+
+    // Another single tap in seek mode adds +30s
+    vi.advanceTimersByTime(200);
+    firePointer(860, 250);
+    expect(onDoubleTap).toHaveBeenLastCalledWith({ side: 'right', delta: 30 });
+
+    // After 1s of inactivity, seek mode exits
+    vi.advanceTimersByTime(1100);
+
+    // New tap after exit starts a fresh single-tap (toggle controls)
+    firePointer(500, 250);
+    vi.advanceTimersByTime(300);
+    expect(mockPlayer.setControlsVisible).toHaveBeenCalled();
 
     manager.destroy();
   });

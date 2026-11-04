@@ -22,6 +22,27 @@ export function calculateBuffered(video: HTMLMediaElement): number {
   return 0;
 }
 
+/**
+ * Recomputes loading boolean according to spec:
+ * loading = seeking || (!paused && readyState < HAVE_FUTURE_DATA) || (readyState === HAVE_NOTHING && networkState === NETWORK_LOADING)
+ * Errors and ended always force loading = false.
+ */
+export function computeLoading(video: HTMLMediaElement): boolean {
+  if (video.error || video.ended) {
+    return false;
+  }
+  const seeking = video.seeking;
+  const paused = video.paused;
+  const readyState = video.readyState;
+  const networkState = video.networkState;
+
+  return (
+    seeking ||
+    (!paused && readyState < 3) /* HAVE_FUTURE_DATA */ ||
+    (readyState === 0 /* HAVE_NOTHING */ && networkState === 2) /* NETWORK_LOADING */
+  );
+}
+
 export function attachNativeMedia(
   video: HTMLVideoElement,
   options: PlayerOptions,
@@ -75,8 +96,12 @@ export function attachNativeMedia(
     }
   }
 
+  const syncLoadingState = () => {
+    store.setState({ loading: computeLoading(video) });
+  };
+
   const handleLoadStart = () => {
-    store.setState({ status: 'loading' });
+    syncLoadingState();
   };
 
   const handleLoadedMetadata = () => {
@@ -87,10 +112,12 @@ export function attachNativeMedia(
       volume: video.volume,
       muted: video.muted,
       playbackRate: video.playbackRate,
+      loading: computeLoading(video),
     });
   };
 
   const handleCanPlay = () => {
+    syncLoadingState();
     if (!video.paused && !video.ended) {
       store.setState({ status: 'playing' });
     } else {
@@ -103,18 +130,18 @@ export function attachNativeMedia(
   };
 
   const handlePlay = () => {
-    store.setState({ status: 'playing' });
+    store.setState({ status: 'playing', loading: computeLoading(video) });
     events.emit('play', undefined);
   };
 
   const handlePlaying = () => {
-    store.setState({ status: 'playing' });
+    store.setState({ status: 'playing', loading: computeLoading(video) });
     events.emit('playing', undefined);
   };
 
   const handlePause = () => {
     if (!video.ended) {
-      store.setState({ status: 'paused' });
+      store.setState({ status: 'paused', loading: computeLoading(video) });
     }
     events.emit('pause', undefined);
   };
@@ -128,6 +155,7 @@ export function attachNativeMedia(
       currentTime,
       duration: duration || store.getState().duration,
       buffered,
+      loading: computeLoading(video),
     };
 
     if (!video.paused && !video.ended && store.getState().status !== 'playing') {
@@ -140,7 +168,7 @@ export function attachNativeMedia(
 
   const handleProgress = () => {
     const buffered = calculateBuffered(video);
-    store.setState({ buffered });
+    store.setState({ buffered, loading: computeLoading(video) });
   };
 
   const handleVolumeChange = () => {
@@ -157,20 +185,34 @@ export function attachNativeMedia(
   };
 
   const handleSeeking = () => {
+    syncLoadingState();
     events.emit('seeking', video.currentTime);
   };
 
   const handleSeeked = () => {
+    syncLoadingState();
     events.emit('seeked', video.currentTime);
   };
 
   const handleWaiting = () => {
-    store.setState({ status: 'buffering' });
+    store.setState({ status: 'buffering', loading: computeLoading(video) });
     events.emit('waiting', undefined);
   };
 
+  const handleStalled = () => {
+    syncLoadingState();
+  };
+
+  const handleEmptied = () => {
+    syncLoadingState();
+  };
+
+  const handleAbort = () => {
+    syncLoadingState();
+  };
+
   const handleEnded = () => {
-    store.setState({ status: 'ended' });
+    store.setState({ status: 'ended', loading: false });
     events.emit('ended', undefined);
   };
 
@@ -197,13 +239,14 @@ export function attachNativeMedia(
       }
     }
 
-    store.setState({ status: 'error', error: message });
+    store.setState({ status: 'error', error: message, loading: false });
     events.emit('error', { message, code, originalError: mediaError });
     if (options.onError) {
       options.onError(message);
     }
   };
 
+  // Attach all 11 loading-relevant events + standard media events
   video.addEventListener('loadstart', handleLoadStart);
   video.addEventListener('loadedmetadata', handleLoadedMetadata);
   video.addEventListener('canplay', handleCanPlay);
@@ -217,6 +260,9 @@ export function attachNativeMedia(
   video.addEventListener('seeking', handleSeeking);
   video.addEventListener('seeked', handleSeeked);
   video.addEventListener('waiting', handleWaiting);
+  video.addEventListener('stalled', handleStalled);
+  video.addEventListener('emptied', handleEmptied);
+  video.addEventListener('abort', handleAbort);
   video.addEventListener('ended', handleEnded);
   video.addEventListener('error', handleError);
 
@@ -227,6 +273,9 @@ export function attachNativeMedia(
   if (video.readyState >= 3) {
     handleCanPlay();
   }
+
+  // Initial loading computation
+  syncLoadingState();
 
   // AutoPlay handling
   if (options.autoPlay) {
@@ -250,6 +299,9 @@ export function attachNativeMedia(
     video.removeEventListener('seeking', handleSeeking);
     video.removeEventListener('seeked', handleSeeked);
     video.removeEventListener('waiting', handleWaiting);
+    video.removeEventListener('stalled', handleStalled);
+    video.removeEventListener('emptied', handleEmptied);
+    video.removeEventListener('abort', handleAbort);
     video.removeEventListener('ended', handleEnded);
     video.removeEventListener('error', handleError);
   };

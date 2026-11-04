@@ -5,18 +5,27 @@ import { FullscreenEnterIcon, FullscreenExitIcon } from '../icons';
 export interface FullscreenButtonProps {
   player: MaskflowPlayer;
   state: PlayerState;
+  className?: string | undefined;
 }
 
-export const FullscreenButton: React.FC<FullscreenButtonProps> = ({ player, state }) => {
+export const FullscreenButton: React.FC<FullscreenButtonProps> = ({
+  player,
+  state,
+  className = '',
+}) => {
+  const isFullscreen = state.isFullscreen;
+  const label = isFullscreen ? 'Exit fullscreen (f)' : 'Fullscreen (f)';
+
   return (
     <button
       type="button"
-      className="mf-btn"
-      aria-label={state.isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-      aria-pressed={state.isFullscreen}
+      className={`mf-btn mf-btn-fullscreen ${className}`.trim()}
+      title={label}
+      aria-label={label}
+      aria-pressed={isFullscreen}
       onClick={() => player.toggleFullscreen()}
     >
-      {state.isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
+      {isFullscreen ? <FullscreenExitIcon /> : <FullscreenEnterIcon />}
     </button>
   );
 };

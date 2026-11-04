@@ -132,17 +132,17 @@ const App = defineComponent({
               h(
                 'select',
                 {
-                  value: theme.value,
                   className: 'demo-select',
+                  value: theme.value,
                   onChange: (e: Event) => {
                     theme.value = (e.target as HTMLSelectElement).value as
                       'dark' | 'light' | 'auto';
                   },
                 },
                 [
-                  h('option', { value: 'dark' }, 'Dark'),
+                  h('option', { value: 'dark' }, 'Dark (YouTube)'),
                   h('option', { value: 'light' }, 'Light'),
-                  h('option', { value: 'auto' }, 'Auto'),
+                  h('option', { value: 'auto' }, 'Auto (System)'),
                 ],
               ),
             ]),
@@ -151,8 +151,8 @@ const App = defineComponent({
               h('span', { className: 'demo-label' }, 'Accent:'),
               h('input', {
                 type: 'color',
+                className: 'demo-color',
                 value: accent.value,
-                className: 'demo-color-picker',
                 onInput: (e: Event) => {
                   accent.value = (e.target as HTMLInputElement).value;
                 },
@@ -160,12 +160,12 @@ const App = defineComponent({
             ]),
 
             h('div', { className: 'demo-group' }, [
-              h('span', { className: 'demo-label' }, 'Aspect Ratio:'),
+              h('span', { className: 'demo-label' }, 'Aspect:'),
               h(
                 'select',
                 {
-                  value: aspectRatio.value,
                   className: 'demo-select',
+                  value: aspectRatio.value,
                   onChange: (e: Event) => {
                     aspectRatio.value = (e.target as HTMLSelectElement).value;
                   },
@@ -190,6 +190,7 @@ const App = defineComponent({
               h(MaskflowPlayer, {
                 ref: playerRef,
                 src: videoSrc.value,
+                title: `Maskflow Stream (Vue 3) — ${sourceKey.value.toUpperCase()}`,
                 theme: theme.value,
                 accent: accent.value,
                 aspectRatio: aspectRatio.value,
@@ -255,4 +256,7 @@ const App = defineComponent({
   },
 });
 
-createApp(App).mount('#app');
+const appEl = document.getElementById('vue-app');
+if (appEl) {
+  createApp(App).mount(appEl);
+}

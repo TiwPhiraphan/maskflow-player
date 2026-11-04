@@ -2,15 +2,16 @@ import React from 'react';
 import type { PlayerState } from '../../core/types';
 
 export interface SpinnerProps {
-  state: PlayerState;
+  state?: PlayerState | undefined;
+  className?: string | undefined;
 }
 
-export const Spinner: React.FC<SpinnerProps> = ({ state }) => {
-  const isLoading = state.status === 'loading' || state.status === 'buffering';
-
-  if (!isLoading) {
+export const Spinner: React.FC<SpinnerProps> = ({ state, className = '' }) => {
+  if (state && !state.loading && state.status !== 'buffering' && state.status !== 'loading') {
     return null;
   }
 
-  return <div className="mf-spinner" aria-label="Loading media" role="status" />;
+  return (
+    <div className={`mf-spinner ${className}`.trim()} aria-label="Loading media" role="status" />
+  );
 };

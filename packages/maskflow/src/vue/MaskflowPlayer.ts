@@ -23,14 +23,17 @@ import {
   PauseIcon,
   VolumeHighIcon,
   VolumeMutedIcon,
-  CaptionsIcon,
   SettingsIcon,
   PipIcon,
   FullscreenEnterIcon,
   FullscreenExitIcon,
+  ReplayIcon,
+  ErrorIcon,
+  SeekBackwardIcon,
+  SeekForwardIcon,
 } from './icons';
 
-const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 
 export const MaskflowPlayer = defineComponent({
   name: 'MaskflowPlayer',
@@ -38,6 +41,10 @@ export const MaskflowPlayer = defineComponent({
     src: {
       type: [String, Array] as PropType<PlayerOptions['src']>,
       required: true,
+    },
+    title: {
+      type: String as PropType<string>,
+      default: '',
     },
     poster: {
       type: String as PropType<string>,
@@ -61,16 +68,7 @@ export const MaskflowPlayer = defineComponent({
     },
     controls: {
       type: Array as PropType<string[]>,
-      default: () => [
-        'play',
-        'progress',
-        'time',
-        'volume',
-        'captions',
-        'settings',
-        'pip',
-        'fullscreen',
-      ],
+      default: () => ['play', 'progress', 'time', 'volume', 'settings', 'pip', 'fullscreen'],
     },
     theme: {
       type: String as PropType<'dark' | 'light' | 'auto'>,
@@ -98,7 +96,7 @@ export const MaskflowPlayer = defineComponent({
     },
     autoHideDelay: {
       type: Number as PropType<number>,
-      default: 2500,
+      default: 3000,
     },
     qualities: {
       type: Array as PropType<QualityLevel[]>,
@@ -175,11 +173,10 @@ export const MaskflowPlayer = defineComponent({
       seconds: 10,
     });
     let seekTimer: ReturnType<typeof setTimeout> | null = null;
-    let accumulatedSeconds = 0;
-    let lastSeekSide: 'left' | 'right' | 'center' = 'center';
 
     const hoverPosition = ref<number | null>(null);
     const isProgressDragging = ref(false);
+    const progressDragPercent = ref<number | null>(null);
 
     // Reactive store state
     const state = useMaskflow(playerInstance);
@@ -196,6 +193,7 @@ export const MaskflowPlayer = defineComponent({
 
       const player = createPlayer(videoEl, {
         src: props.src,
+        title: props.title,
         poster: props.poster,
         tracks: props.tracks,
         autoPlay: props.autoPlay,
@@ -224,24 +222,21 @@ export const MaskflowPlayer = defineComponent({
       player.events.on('doubletap', (data: DoubleTapEvent) => {
         if (data.side === 'center') return;
         const absDelta = Math.abs(data.delta ?? 10);
-        if (lastSeekSide === data.side && accumulatedSeconds > 0) {
-          accumulatedSeconds += absDelta;
-        } else {
-          accumulatedSeconds = absDelta;
-          lastSeekSide = data.side;
-        }
 
         seekFlash.value = {
           active: true,
           side: data.side,
-          seconds: accumulatedSeconds,
+          seconds: absDelta,
         };
 
         if (seekTimer) clearTimeout(seekTimer);
         seekTimer = setTimeout(() => {
           seekFlash.value = { ...seekFlash.value, active: false };
-          accumulatedSeconds = 0;
-        }, 750);
+        }, 1000);
+      });
+
+      player.events.on('togglesettings', () => {
+        toggleSettings();
       });
 
       player.events.on('toggleshortcuts', () => {
@@ -301,12 +296,14 @@ export const MaskflowPlayer = defineComponent({
 
       const isVideoPlaying =
         s.status === 'playing' || (p?.video && !p.video.paused && !p.video.ended);
+      const isError = s.status === 'error';
 
       const playerClasses = [
         'mf-player',
         isVideoPlaying ? 'mf-playing' : '',
         s.isFullscreen ? 'mf-fullscreen' : '',
-        !s.controlsVisible ? 'mf-controls-hidden' : '',
+        !s.controlsVisible && !isError ? 'mf-controls-hidden' : '',
+        isError ? 'mf-error' : '',
         props.class,
       ]
         .filter(Boolean)
@@ -327,18 +324,37 @@ export const MaskflowPlayer = defineComponent({
 
       const hasControl = (item: string) => !props.controls || props.controls.includes(item);
 
-      // Render Progress Bar
+      // Render Progress Bar with pointer drag commit
       const renderProgressBar = (): VNode | null => {
         if (!hasControl('progress') || !p) return null;
         const duration = s.duration > 0 ? s.duration : 0;
-        const progressPercent =
-          duration > 0 ? Math.min(100, Math.max(0, (s.currentTime / duration) * 100)) : 0;
+        const activePercent =
+          isProgressDragging.value && progressDragPercent.value !== null
+            ? progressDragPercent.value
+            : duration > 0
+              ? Math.min(100, Math.max(0, (s.currentTime / duration) * 100))
+              : 0;
+
         const bufferedPercent = Math.min(100, Math.max(0, s.buffered * 100));
         const hoverTime =
           hoverPosition.value !== null && duration > 0 ? hoverPosition.value * duration : 0;
+        const displayTime =
+          isProgressDragging.value && progressDragPercent.value !== null
+            ? (progressDragPercent.value / 100) * duration
+            : s.currentTime;
 
-        const endDrag = (target: HTMLElement, pointerId: number) => {
+        const endDrag = (target: HTMLElement, pointerId: number, clientX?: number) => {
+          if (!isProgressDragging.value) return;
+          let finalRatio = progressDragPercent.value !== null ? progressDragPercent.value / 100 : 0;
+          if (clientX !== undefined) {
+            const rect = target.getBoundingClientRect();
+            if (rect.width > 0) {
+              finalRatio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+            }
+          }
+          p.seek(finalRatio * duration);
           isProgressDragging.value = false;
+          progressDragPercent.value = null;
           p.lockControls(false);
           try {
             target.releasePointerCapture(pointerId);
@@ -356,8 +372,8 @@ export const MaskflowPlayer = defineComponent({
             'aria-label': 'Seek progress',
             'aria-valuemin': 0,
             'aria-valuemax': Math.round(duration),
-            'aria-valuenow': Math.round(s.currentTime),
-            'aria-valuetext': `${formatTime(s.currentTime)} of ${formatTime(duration)}`,
+            'aria-valuenow': Math.round(displayTime),
+            'aria-valuetext': `${formatTime(displayTime)} of ${formatTime(duration)}`,
             onPointerdown: (e: PointerEvent) => {
               if (e.button !== 0) return;
               isProgressDragging.value = true;
@@ -371,7 +387,7 @@ export const MaskflowPlayer = defineComponent({
               const rect = target.getBoundingClientRect();
               if (rect.width > 0) {
                 const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                p.seek(ratio * duration);
+                progressDragPercent.value = ratio * 100;
               }
             },
             onPointermove: (e: PointerEvent) => {
@@ -381,38 +397,28 @@ export const MaskflowPlayer = defineComponent({
                 const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
                 hoverPosition.value = ratio;
                 if (isProgressDragging.value) {
-                  p.seek(ratio * duration);
+                  progressDragPercent.value = ratio * 100;
                 }
               }
             },
             onPointerup: (e: PointerEvent) => {
-              if (isProgressDragging.value) {
-                endDrag(e.currentTarget as HTMLElement, e.pointerId);
-              }
+              endDrag(e.currentTarget as HTMLElement, e.pointerId, e.clientX);
             },
             onPointercancel: (e: PointerEvent) => {
-              if (isProgressDragging.value) {
-                endDrag(e.currentTarget as HTMLElement, e.pointerId);
-              }
+              endDrag(e.currentTarget as HTMLElement, e.pointerId);
             },
             onPointerleave: () => {
               if (!isProgressDragging.value) {
                 hoverPosition.value = null;
               }
             },
-            onClick: (e: MouseEvent) => {
-              const target = e.currentTarget as HTMLElement;
-              const rect = target.getBoundingClientRect();
-              const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-              p.seek(ratio * duration);
-            },
             onKeydown: (e: KeyboardEvent) => {
               if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                p.seekBy(5);
+                p.seekBy(10);
               } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
-                p.seekBy(-5);
+                p.seekBy(-10);
               }
             },
           },
@@ -424,11 +430,11 @@ export const MaskflowPlayer = defineComponent({
               }),
               h('div', {
                 className: 'mf-progress-played',
-                style: { width: `${progressPercent}%` },
+                style: { width: `${activePercent}%` },
               }),
               h('div', {
                 className: 'mf-progress-thumb',
-                style: { left: `${progressPercent}%` },
+                style: { left: `${activePercent}%` },
               }),
             ]),
             hoverPosition.value !== null && duration > 0
@@ -450,14 +456,16 @@ export const MaskflowPlayer = defineComponent({
         if (!hasControl('settings') || !p) return null;
         const qualities = s.qualities;
         const hasQualities = qualities.length > 0;
+        const label = 'Settings (s)';
 
         return h('div', { ref: settingsContainerRef, className: 'mf-settings-container' }, [
           h(
             'button',
             {
               type: 'button',
-              className: 'mf-btn',
-              'aria-label': 'Settings',
+              className: 'mf-btn mf-btn-settings',
+              title: label,
+              'aria-label': label,
               'aria-haspopup': 'menu',
               'aria-expanded': isMenuOpen.value,
               onClick: toggleSettings,
@@ -542,11 +550,7 @@ export const MaskflowPlayer = defineComponent({
                         ),
                         h('div', { className: 'mf-shortcuts-table' }, [
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [
-                              h('kbd', 'Space'),
-                              ' / ',
-                              h('kbd', 'k'),
-                            ]),
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'Space')]),
                             h('span', 'Play / Pause'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
@@ -555,27 +559,19 @@ export const MaskflowPlayer = defineComponent({
                               ' / ',
                               h('kbd', '→'),
                             ]),
-                            h('span', 'Seek 5s'),
+                            h('span', 'Seek ±10s'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [
-                              h('kbd', 'j'),
-                              ' / ',
-                              h('kbd', 'l'),
-                            ]),
-                            h('span', 'Seek 10s'),
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 's')]),
+                            h('span', 'Toggle settings'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [
-                              h('kbd', 'Home'),
-                              ' / ',
-                              h('kbd', 'End'),
-                            ]),
-                            h('span', 'Start / End'),
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'f')]),
+                            h('span', 'Fullscreen'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', '0–9')]),
-                            h('span', 'Jump 0%–90%'),
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'm')]),
+                            h('span', 'Mute'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
                             h('span', { className: 'mf-shortcut-keys' }, [
@@ -586,40 +582,12 @@ export const MaskflowPlayer = defineComponent({
                             h('span', 'Volume ±5%'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'm')]),
-                            h('span', 'Mute'),
-                          ]),
-                          h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'f')]),
-                            h('span', 'Fullscreen'),
-                          ]),
-                          h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'c')]),
-                            h('span', 'Captions'),
-                          ]),
-                          h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [
-                              h('kbd', 'p'),
-                              ' / ',
-                              h('kbd', 'i'),
-                            ]),
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'p')]),
                             h('span', 'Picture-in-Picture'),
                           ]),
                           h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [
-                              h('kbd', '<'),
-                              ' / ',
-                              h('kbd', '>'),
-                            ]),
-                            h('span', 'Speed'),
-                          ]),
-                          h('div', { className: 'mf-shortcut-row' }, [
-                            h('span', { className: 'mf-shortcut-keys' }, [
-                              h('kbd', ','),
-                              ' / ',
-                              h('kbd', '.'),
-                            ]),
-                            h('span', 'Frame (paused)'),
+                            h('span', { className: 'mf-shortcut-keys' }, [h('kbd', 'Esc')]),
+                            h('span', 'Close settings'),
                           ]),
                         ]),
                       ]),
@@ -693,134 +661,183 @@ export const MaskflowPlayer = defineComponent({
         ]);
       };
 
-      // Control bar
-      const renderControlBar = (): VNode | null => {
+      // Bottom Row: 7 items (Play, Volume, CurrentTime, Progress, Duration, PiP, Fullscreen)
+      const renderBottomBar = (): VNode | null => {
         if (!p) return null;
+
+        const isPaused = p.video ? p.video.paused : s.status !== 'playing';
+        const isEnded = s.status === 'ended' || (p.video ? p.video.ended : false);
+        const isPlaying = !isPaused && !isEnded;
+        const isMuted = s.muted || s.volume === 0;
+
+        const playLabel = isEnded ? 'Replay (space)' : isPlaying ? 'Pause (space)' : 'Play (space)';
+        const volLabel = isMuted ? 'Unmute (m)' : 'Mute (m)';
+        const fsLabel = s.isFullscreen ? 'Exit fullscreen (f)' : 'Fullscreen (f)';
+        const pipLabel = 'Picture-in-picture (p)';
 
         return h(
           'div',
-          { className: 'mf-controls mf-glass', role: 'toolbar', 'aria-label': 'Media controls' },
+          { className: 'mf-bottom-bar', role: 'toolbar', 'aria-label': 'Media controls' },
           [
-            renderProgressBar(),
-            h('div', { className: 'mf-controls-row' }, [
-              // Left Group
-              h('div', { className: 'mf-controls-left' }, [
-                hasControl('play')
-                  ? h(
-                      'button',
-                      {
-                        type: 'button',
-                        className: 'mf-btn',
-                        'aria-label': s.status === 'playing' ? 'Pause' : 'Play',
-                        onClick: () => p.toggle(),
-                      },
-                      [s.status === 'playing' ? PauseIcon() : PlayIcon()],
-                    )
-                  : null,
-                hasControl('volume')
-                  ? h('div', { className: 'mf-volume-container' }, [
-                      h(
-                        'button',
-                        {
-                          type: 'button',
-                          className: 'mf-btn',
-                          'aria-label': s.muted || s.volume === 0 ? 'Unmute' : 'Mute',
-                          onClick: () => p.toggleMute(),
-                        },
-                        [s.muted || s.volume === 0 ? VolumeMutedIcon() : VolumeHighIcon()],
-                      ),
-                      h(
-                        'div',
-                        {
-                          className: 'mf-volume-slider',
-                          role: 'slider',
-                          tabIndex: 0,
-                          'aria-label': 'Volume',
-                          'aria-valuemin': 0,
-                          'aria-valuemax': 100,
-                          'aria-valuenow': Math.round((s.muted ? 0 : s.volume) * 100),
-                          'aria-valuetext': `${Math.round((s.muted ? 0 : s.volume) * 100)}%`,
-                          onClick: (e: MouseEvent) => {
-                            const target = e.currentTarget as HTMLElement;
-                            const rect = target.getBoundingClientRect();
-                            const ratio = Math.max(
-                              0,
-                              Math.min(1, (e.clientX - rect.left) / rect.width),
-                            );
-                            p.setVolume(ratio);
-                          },
-                        },
-                        [
-                          h('div', { className: 'mf-volume-rail' }, [
-                            h('div', {
-                              className: 'mf-volume-fill',
-                              style: { width: `${(s.muted ? 0 : s.volume) * 100}%` },
-                            }),
-                          ]),
-                        ],
-                      ),
-                    ])
-                  : null,
-                hasControl('time')
-                  ? h(
-                      'div',
-                      {
-                        className: 'mf-time',
-                        'aria-label': `Current time ${formatTime(s.currentTime)} of ${formatTime(s.duration)}`,
-                      },
-                      [
-                        h('span', { className: 'mf-time-current' }, formatTime(s.currentTime)),
-                        h('span', { className: 'mf-time-separator' }, '/'),
-                        h('span', { className: 'mf-time-duration' }, formatTime(s.duration)),
-                      ],
-                    )
-                  : null,
-              ]),
+            // 1. Play/pause button (desktop only)
+            hasControl('play')
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'mf-btn mf-btn-play mf-desktop-only',
+                    title: playLabel,
+                    'aria-label': playLabel,
+                    'aria-pressed': isPlaying,
+                    onClick: () => p.toggle(),
+                  },
+                  [isEnded ? ReplayIcon() : isPlaying ? PauseIcon() : PlayIcon()],
+                )
+              : null,
 
-              // Right Group
-              h('div', { className: 'mf-controls-right' }, [
-                hasControl('captions')
-                  ? h(
-                      'button',
-                      {
-                        type: 'button',
-                        className: `mf-btn ${s.captionsEnabled ? 'mf-active' : ''}`,
-                        'aria-label': 'Captions',
-                        'aria-pressed': s.captionsEnabled,
-                        onClick: () => p.toggleCaptions(),
+            // 2. Volume control (grouped button + range input, range is desktop only)
+            hasControl('volume')
+              ? h('div', { className: 'mf-volume-container' }, [
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'mf-btn mf-btn-volume',
+                      title: volLabel,
+                      'aria-label': volLabel,
+                      'aria-pressed': isMuted,
+                      onClick: () => p.toggleMute(),
+                    },
+                    [isMuted ? VolumeMutedIcon() : VolumeHighIcon()],
+                  ),
+                  h(
+                    'div',
+                    {
+                      className: 'mf-volume-slider mf-desktop-only',
+                      role: 'slider',
+                      tabIndex: 0,
+                      'aria-label': 'Volume',
+                      'aria-valuemin': 0,
+                      'aria-valuemax': 100,
+                      'aria-valuenow': Math.round((isMuted ? 0 : s.volume) * 100),
+                      'aria-valuetext': `${Math.round((isMuted ? 0 : s.volume) * 100)}%`,
+                      onClick: (e: MouseEvent) => {
+                        const target = e.currentTarget as HTMLElement;
+                        const rect = target.getBoundingClientRect();
+                        const ratio = Math.max(
+                          0,
+                          Math.min(1, (e.clientX - rect.left) / rect.width),
+                        );
+                        p.setVolume(ratio);
                       },
-                      [CaptionsIcon()],
-                    )
-                  : null,
-                renderSettingsMenu(),
-                hasControl('pip')
-                  ? h(
-                      'button',
-                      {
-                        type: 'button',
-                        className: 'mf-btn',
-                        'aria-label': 'Picture in Picture',
-                        onClick: () => p.togglePip(),
-                      },
-                      [PipIcon()],
-                    )
-                  : null,
-                hasControl('fullscreen')
-                  ? h(
-                      'button',
-                      {
-                        type: 'button',
-                        className: 'mf-btn',
-                        'aria-label': s.isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen',
-                        'aria-pressed': s.isFullscreen,
-                        onClick: () => p.toggleFullscreen(),
-                      },
-                      [s.isFullscreen ? FullscreenExitIcon() : FullscreenEnterIcon()],
-                    )
-                  : null,
-              ]),
-            ]),
+                    },
+                    [
+                      h('div', { className: 'mf-volume-rail' }, [
+                        h('div', {
+                          className: 'mf-volume-fill',
+                          style: { width: `${(isMuted ? 0 : s.volume) * 100}%` },
+                        }),
+                      ]),
+                    ],
+                  ),
+                ])
+              : null,
+
+            // 3. Current time: mm:ss (no hours)
+            hasControl('time')
+              ? h(
+                  'span',
+                  {
+                    className: 'mf-time mf-time-current',
+                    'aria-label': `Current time ${formatTime(s.currentTime)}`,
+                  },
+                  formatTime(s.currentTime),
+                )
+              : null,
+
+            // 4. Progress bar (flex-1)
+            renderProgressBar(),
+
+            // 5. Duration: mm:ss (no hours)
+            hasControl('time')
+              ? h(
+                  'span',
+                  {
+                    className: 'mf-time mf-time-duration',
+                    'aria-label': `Duration ${formatTime(s.duration)}`,
+                  },
+                  formatTime(s.duration),
+                )
+              : null,
+
+            // 6. Picture-in-picture button (desktop only)
+            hasControl('pip')
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'mf-btn mf-btn-pip mf-desktop-only',
+                    title: pipLabel,
+                    'aria-label': pipLabel,
+                    'aria-pressed': s.isPip,
+                    onClick: () => p.togglePip(),
+                  },
+                  [PipIcon()],
+                )
+              : null,
+
+            // 7. Fullscreen button
+            hasControl('fullscreen')
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'mf-btn mf-btn-fullscreen',
+                    title: fsLabel,
+                    'aria-label': fsLabel,
+                    'aria-pressed': s.isFullscreen,
+                    onClick: () => p.toggleFullscreen(),
+                  },
+                  [s.isFullscreen ? FullscreenExitIcon() : FullscreenEnterIcon()],
+                )
+              : null,
           ],
+        );
+      };
+
+      // Center Big Play / Loading Button
+      const renderCenterBigButton = (): VNode | null => {
+        if (!p || s.status === 'error') return null;
+
+        const isLoading = s.loading || s.status === 'buffering' || s.status === 'loading';
+        if (isLoading) {
+          return h(
+            'div',
+            {
+              className: 'mf-big-play mf-big-play-loading',
+              role: 'status',
+              'aria-label': 'Loading media',
+            },
+            [h('div', { className: 'mf-spinner' })],
+          );
+        }
+
+        const isPaused = p.video ? p.video.paused : s.status !== 'playing';
+        const isEnded = s.status === 'ended' || (p.video ? p.video.ended : false);
+        const isPlaying = !isPaused && !isEnded;
+        const label = isEnded ? 'Replay (space)' : isPlaying ? 'Pause (space)' : 'Play (space)';
+
+        return h(
+          'button',
+          {
+            type: 'button',
+            className: `mf-big-play ${isPlaying ? 'mf-playing' : ''}`,
+            title: label,
+            'aria-label': label,
+            'aria-pressed': isPlaying,
+            onClick: () => p.toggle(),
+          },
+          [isEnded ? ReplayIcon() : isPlaying ? PauseIcon() : PlayIcon()],
         );
       };
 
@@ -847,69 +864,78 @@ export const MaskflowPlayer = defineComponent({
                 [
                   h('div', { key: seekFlash.value.seconds, className: 'mf-seek-flash-content' }, [
                     h('div', { className: 'mf-seek-flash-arrows' }, [
-                      seekFlash.value.side === 'left'
-                        ? h(
-                            'svg',
-                            { viewBox: '0 0 24 24', width: 28, height: 28, fill: 'currentColor' },
-                            [h('path', { d: 'M12 6v12l-6-6 6-6zm6 0v12l-6-6 6-6z' })],
-                          )
-                        : h(
-                            'svg',
-                            { viewBox: '0 0 24 24', width: 28, height: 28, fill: 'currentColor' },
-                            [h('path', { d: 'M6 6v12l6-6-6-6zm6 0v12l6-6-6-6z' })],
-                          ),
+                      seekFlash.value.side === 'left' ? SeekBackwardIcon() : SeekForwardIcon(),
                     ]),
                     h(
                       'div',
                       { className: 'mf-seek-flash-text' },
-                      `${seekFlash.value.seconds} seconds`,
+                      seekFlash.value.side === 'left'
+                        ? `-${seekFlash.value.seconds}s`
+                        : `+${seekFlash.value.seconds}s`,
                     ),
                   ]),
                 ],
               )
             : null,
 
-          // Big play button
-          p && !isVideoPlaying && s.status !== 'error'
-            ? h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'mf-big-play',
-                  'aria-label': s.status === 'ended' ? 'Replay' : 'Play',
-                  onClick: () => p.toggle(),
-                },
-                [PlayIcon()],
-              )
-            : null,
-
-          // Spinner
-          s.status === 'loading' || s.status === 'buffering'
-            ? h('div', { className: 'mf-spinner', role: 'status', 'aria-label': 'Loading media' })
-            : null,
-
-          // Error overlay
-          s.status === 'error'
-            ? h('div', { className: 'mf-error-overlay', role: 'alert', 'aria-live': 'assertive' }, [
-                h('div', { className: 'mf-error-msg' }, s.error || 'A playback error occurred.'),
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'mf-btn mf-glass mf-error-retry',
-                    onClick: () => {
-                      if (typeof props.src === 'string' && p) {
-                        p.video.src = props.src;
-                      }
-                      p?.play().catch(() => {});
+          // 3-Row Grid Controls Wrapper
+          p
+            ? h('div', { className: 'mf-controls-wrapper' }, [
+                // Top Row: Title + Settings
+                h('div', { className: 'mf-top-bar' }, [
+                  h(
+                    'div',
+                    {
+                      className: 'mf-title',
+                      title: props.title || s.title || '',
                     },
-                  },
-                  'Retry',
-                ),
+                    props.title || s.title || '',
+                  ),
+                  h('div', { className: 'mf-top-actions' }, [renderSettingsMenu()]),
+                ]),
+
+                // Center Row: Left Seek Zone, Center Big Button, Right Seek Zone
+                h('div', { className: 'mf-center-row' }, [
+                  h('div', { className: 'mf-seek-zone mf-seek-zone-left', 'aria-hidden': 'true' }),
+                  h('div', { className: 'mf-center-action' }, [renderCenterBigButton()]),
+                  h('div', { className: 'mf-seek-zone mf-seek-zone-right', 'aria-hidden': 'true' }),
+                ]),
+
+                // Bottom Row: 7 controls in flex row
+                renderBottomBar(),
+
+                // Error Screen
+                s.status === 'error'
+                  ? h(
+                      'div',
+                      { className: 'mf-error-overlay', role: 'alert', 'aria-live': 'assertive' },
+                      [
+                        h('div', { className: 'mf-error-icon' }, [ErrorIcon()]),
+                        h(
+                          'div',
+                          { className: 'mf-error-msg' },
+                          s.error || 'A playback error occurred.',
+                        ),
+                        h(
+                          'button',
+                          {
+                            type: 'button',
+                            className: 'mf-btn mf-glass mf-error-retry',
+                            onClick: () => {
+                              const wasPlaying = p.video && !p.video.paused;
+                              p.video.load();
+                              if (wasPlaying || s.status === 'playing') {
+                                p.play().catch(() => {});
+                              }
+                            },
+                          },
+                          'Retry',
+                        ),
+                      ],
+                    )
+                  : null,
               ])
             : null,
-
-          renderControlBar(),
         ],
       );
     };

@@ -60,6 +60,8 @@ export function createPlayer(
     initialQualities.length > 0 && initialQualities[0] ? initialQualities[0].id : 'auto';
 
   const store = createStore<PlayerState>({
+    title: options.title || '',
+    loading: false,
     status: 'idle',
     currentTime: 0,
     duration: 0,
@@ -110,6 +112,11 @@ export function createPlayer(
 
     getState(): PlayerState {
       return store.getState();
+    },
+
+    setTitle(title: string): void {
+      if (isDestroyed) return;
+      store.setState({ title });
     },
 
     async play(): Promise<void> {
@@ -265,7 +272,7 @@ export function createPlayer(
 
   const keyboardManager = createKeyboardManager(container, player, options.keyboard !== false);
   const persistenceManager = createPersistenceManager(player, Boolean(options.persist));
-  const autohideManager = createAutohideManager(container, player, options.autoHideDelay ?? 2500);
+  const autohideManager = createAutohideManager(container, player, options.autoHideDelay ?? 3000);
   const gestureManager = createGestureManager(container, player, options.gestures !== false);
 
   const handleButtonClick = (e: MouseEvent) => {

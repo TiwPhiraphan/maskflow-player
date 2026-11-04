@@ -6,9 +6,10 @@ import { clamp } from '../../core/utils/math';
 export interface VolumeControlProps {
   player: MaskflowPlayer;
   state: PlayerState;
+  className?: string | undefined;
 }
 
-export const VolumeControl: React.FC<VolumeControlProps> = ({ player, state }) => {
+export const VolumeControl: React.FC<VolumeControlProps> = ({ player, state, className = '' }) => {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -75,21 +76,25 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({ player, state }) =
     }
   };
 
+  const label = isMuted ? 'Unmute (m)' : 'Mute (m)';
+
   return (
-    <div className="mf-volume-container">
+    <div className={`mf-volume-container ${className}`.trim()}>
       <button
         type="button"
-        className="mf-btn"
-        aria-label={isMuted ? 'Unmute' : 'Mute'}
+        className="mf-btn mf-btn-volume"
+        title={label}
+        aria-label={label}
         aria-pressed={isMuted}
         onClick={() => player.toggleMute()}
       >
         {isMuted ? <VolumeMutedIcon /> : <VolumeHighIcon />}
       </button>
 
+      {/* Volume slider is desktop-only; hidden on mobile */}
       <div
         ref={sliderRef}
-        className="mf-volume-slider"
+        className="mf-volume-slider mf-desktop-only"
         role="slider"
         tabIndex={0}
         aria-label="Volume"

@@ -2,6 +2,8 @@ import { useSyncExternalStore } from 'react';
 import type { MaskflowPlayer, PlayerState } from '../core/types';
 
 const defaultPlayerState: PlayerState = {
+  title: '',
+  loading: false,
   status: 'idle',
   currentTime: 0,
   duration: 0,
