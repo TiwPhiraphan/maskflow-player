@@ -1,6 +1,6 @@
 {
   "name": "maskflow",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Modern, accessible, mobile-first video player with futuristic glassmorphism controls",
   "author": "TiwPhiraphan",

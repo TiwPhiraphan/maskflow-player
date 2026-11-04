@@ -94,6 +94,10 @@ export function attachNativeMedia(
       }
       video.appendChild(sourceEl);
     }
+    const firstItem = (src as MediaSourceItem[])[0];
+    if (firstItem?.src) {
+      video.src = firstItem.src;
+    }
   }
 
   const syncLoadingState = () => {
@@ -147,6 +151,9 @@ export function attachNativeMedia(
   };
 
   const handleTimeUpdate = () => {
+    if (video.seeking) {
+      return;
+    }
     const currentTime = video.currentTime;
     const duration = Number.isFinite(video.duration) ? video.duration : 0;
     const buffered = calculateBuffered(video);
@@ -185,12 +192,12 @@ export function attachNativeMedia(
   };
 
   const handleSeeking = () => {
-    syncLoadingState();
+    store.setState({ currentTime: video.currentTime, loading: computeLoading(video) });
     events.emit('seeking', video.currentTime);
   };
 
   const handleSeeked = () => {
-    syncLoadingState();
+    store.setState({ currentTime: video.currentTime, loading: computeLoading(video) });
     events.emit('seeked', video.currentTime);
   };
 

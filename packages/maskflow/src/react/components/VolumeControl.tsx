@@ -47,6 +47,7 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({ player, state, cla
   const endDrag = (target: HTMLElement, pointerId: number) => {
     setIsDragging(false);
     player.lockControls(false);
+    target.blur?.();
     try {
       target.releasePointerCapture(pointerId);
     } catch {

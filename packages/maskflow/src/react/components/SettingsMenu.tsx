@@ -8,7 +8,7 @@ export interface SettingsMenuProps {
   className?: string | undefined;
 }
 
-type MenuView = 'main' | 'speed' | 'quality' | 'shortcuts';
+type MenuView = 'main' | 'speed' | 'quality' | 'theme' | 'shortcuts';
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 
@@ -157,6 +157,18 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state, class
               type="button"
               className="mf-menu-item"
               role="menuitem"
+              onClick={() => setCurrentView('theme')}
+            >
+              <span>Appearance</span>
+              <span className="mf-menu-item-value">
+                {state.theme === 'light' ? 'Light' : state.theme === 'dark' ? 'Dark' : 'Auto'} ›
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="mf-menu-item"
+              role="menuitem"
               onClick={() => setCurrentView('shortcuts')}
             >
               <span>Shortcuts</span>
@@ -290,6 +302,40 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ player, state, class
               >
                 <span>{q.label}</span>
                 {state.quality === q.id && <span>✓</span>}
+              </button>
+            ))}
+          </>
+        )}
+
+        {currentView === 'theme' && (
+          <>
+            <button
+              type="button"
+              className="mf-menu-item mf-menu-item-back"
+              onClick={() => setCurrentView('main')}
+            >
+              <span>‹ Back to settings</span>
+            </button>
+            {(
+              [
+                { id: 'dark', label: 'Dark theme' },
+                { id: 'light', label: 'Light theme' },
+                { id: 'auto', label: 'Device theme' },
+              ] as const
+            ).map(({ id, label: themeLabel }) => (
+              <button
+                key={id}
+                type="button"
+                className="mf-menu-item"
+                role="menuitemradio"
+                aria-checked={state.theme === id}
+                onClick={() => {
+                  player.setTheme(id);
+                  closeMenu();
+                }}
+              >
+                <span>{themeLabel}</span>
+                {state.theme === id && <span>✓</span>}
               </button>
             ))}
           </>

@@ -26,8 +26,10 @@ export interface PlayerState {
   quality: string | number | 'auto';
   qualities: QualityLevel[];
   captionsEnabled: boolean;
+  hasCaptions?: boolean;
   controlsVisible: boolean;
   aspectRatio: string; // e.g. "16/9"
+  theme: 'dark' | 'light' | 'auto';
   error: string | null;
 }
 
@@ -58,6 +60,7 @@ export interface PlayerEvents {
   doubletap: DoubleTapEvent;
   toggleshortcuts: void;
   togglesettings: void;
+  themechange: 'dark' | 'light' | 'auto';
   ready: void;
   destroy: void;
 }
@@ -126,5 +129,6 @@ export interface MaskflowPlayer {
   setControlsVisible(visible: boolean): void;
   lockControls(locked: boolean): void;
   setAspectRatio(ratio: string): void;
+  setTheme(theme: 'dark' | 'light' | 'auto'): void;
   destroy(): void;
 }

@@ -5,6 +5,7 @@ import { PlayButton } from './PlayButton';
 import { VolumeControl } from './VolumeControl';
 import { PipButton } from './PipButton';
 import { FullscreenButton } from './FullscreenButton';
+import { CaptionsButton } from './CaptionsButton';
 import { formatTime } from '../../core/utils/time';
 
 export interface ControlBarProps {
@@ -14,7 +15,16 @@ export interface ControlBarProps {
   className?: string | undefined;
 }
 
-const DEFAULT_CONTROLS = ['play', 'progress', 'time', 'volume', 'settings', 'pip', 'fullscreen'];
+const DEFAULT_CONTROLS = [
+  'play',
+  'progress',
+  'time',
+  'volume',
+  'captions',
+  'settings',
+  'pip',
+  'fullscreen',
+];
 
 export const ControlBar: React.FC<ControlBarProps> = ({
   player,
@@ -56,6 +66,12 @@ export const ControlBar: React.FC<ControlBarProps> = ({
           {formatTime(state.duration)}
         </span>
       )}
+
+      {/* Subtitles / Captions button (visible when tracks exist) */}
+      {isEnabled('captions') &&
+        (state.hasCaptions ?? Boolean(player.options.tracks?.length)) && (
+          <CaptionsButton player={player} state={state} />
+        )}
 
       {/* 6. Picture-in-picture button (desktop only) */}
       {isEnabled('pip') && <PipButton player={player} state={state} className="mf-desktop-only" />}

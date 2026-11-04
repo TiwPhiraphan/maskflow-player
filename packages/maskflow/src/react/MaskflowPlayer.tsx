@@ -107,11 +107,18 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
     };
   }, [src]);
 
-  // Imperative ref forwarding
-  useImperativeHandle(ref, () => player as IMaskflowPlayer, [player]);
-
   // Reactive store subscription
   const state = useMaskflow(player);
+
+  // Sync theme prop
+  useEffect(() => {
+    if (player && theme && theme !== state.theme) {
+      player.setTheme(theme);
+    }
+  }, [player, theme, state.theme]);
+
+  // Imperative ref forwarding
+  useImperativeHandle(ref, () => player as IMaskflowPlayer, [player]);
 
   const mergedStyle: React.CSSProperties = {
     ...style,
@@ -147,7 +154,12 @@ export const MaskflowPlayer = forwardRef<IMaskflowPlayer, MaskflowPlayerProps>((
   const isEnabled = (name: string) => controls.includes(name);
 
   return (
-    <div ref={containerRef} className={containerClasses} data-theme={theme} style={mergedStyle}>
+    <div
+      ref={containerRef}
+      className={containerClasses}
+      data-theme={state.theme || theme}
+      style={mergedStyle}
+    >
       <video ref={videoRef} className="mf-video" playsInline />
 
       {/* Double-tap / Seek Animation Overlays (Stacked) */}

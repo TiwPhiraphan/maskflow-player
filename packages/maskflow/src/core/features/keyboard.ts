@@ -12,6 +12,31 @@ export function createKeyboardManager(
   enabled = true,
 ): KeyboardManager {
   let isEnabled = enabled;
+  let isHovered = false;
+
+  const onPointerEnter = () => {
+    isHovered = true;
+  };
+  const onPointerLeave = () => {
+    isHovered = false;
+  };
+  const onPointerDown = () => {
+    if (
+      typeof document !== 'undefined' &&
+      document.activeElement !== container &&
+      !container.contains(document.activeElement)
+    ) {
+      container.focus?.({ preventScroll: true });
+    }
+  };
+
+  container.addEventListener('pointerenter', onPointerEnter);
+  container.addEventListener('pointerleave', onPointerLeave);
+  container.addEventListener('mouseenter', onPointerEnter);
+  container.addEventListener('mouseleave', onPointerLeave);
+  container.addEventListener('pointerdown', onPointerDown);
+
+  const handledEvents = new WeakSet<KeyboardEvent>();
 
   function isInputFocused(event: KeyboardEvent): boolean {
     const target = event.target as HTMLElement | null;
@@ -27,6 +52,8 @@ export function createKeyboardManager(
 
   function handleKeyDown(event: KeyboardEvent): void {
     if (!isEnabled) return;
+    if (handledEvents.has(event)) return;
+
     if (isInputFocused(event)) return;
 
     // Ignore events with modifier keys (ctrl, meta, alt) per spec
@@ -39,18 +66,22 @@ export function createKeyboardManager(
     const isDirect = currentTarget === container || event.target === container;
     const doc = typeof document !== 'undefined' ? document : null;
     const activeEl = doc?.activeElement;
-    const hasFocus = activeEl && (activeEl === container || container.contains(activeEl));
+    const hasFocus = Boolean(activeEl && (activeEl === container || container.contains(activeEl)));
 
-    let isHovered = false;
-    try {
-      isHovered = Boolean(container.matches?.(':hover'));
-    } catch {
-      // Ignore pseudo-class errors in test environments
+    let matchesHover = isHovered;
+    if (!matchesHover) {
+      try {
+        matchesHover = Boolean(container.matches?.(':hover'));
+      } catch {
+        // Ignore pseudo-class errors in test environments
+      }
     }
 
-    if (!isDirect && !hasFocus && !isHovered) {
+    if (!isDirect && !hasFocus && !matchesHover) {
       return;
     }
+
+    handledEvents.add(event);
 
     const target = event.target as HTMLElement | null;
     const isButton = target?.tagName === 'BUTTON' || target?.getAttribute('role') === 'button';
@@ -208,6 +239,9 @@ export function createKeyboardManager(
   }
 
   container.addEventListener('keydown', handleKeyDown);
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', handleKeyDown);
+  }
 
   return {
     enable(): void {
@@ -218,6 +252,14 @@ export function createKeyboardManager(
     },
     destroy(): void {
       container.removeEventListener('keydown', handleKeyDown);
+      container.removeEventListener('pointerenter', onPointerEnter);
+      container.removeEventListener('pointerleave', onPointerLeave);
+      container.removeEventListener('mouseenter', onPointerEnter);
+      container.removeEventListener('mouseleave', onPointerLeave);
+      container.removeEventListener('pointerdown', onPointerDown);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', handleKeyDown);
+      }
     },
   };
 }

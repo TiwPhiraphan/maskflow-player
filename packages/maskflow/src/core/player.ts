@@ -26,6 +26,10 @@ export function createPlayer(
   }
 
   const container = options.container || videoElement.parentElement || videoElement;
+  const initialTheme = options.theme || 'dark';
+  if (container instanceof HTMLElement) {
+    container.setAttribute('data-theme', initialTheme);
+  }
   const initialVolume = typeof options.muted === 'boolean' && options.muted ? 0 : 1;
   const initialMuted = Boolean(options.muted);
   const initialAspectRatio = options.aspectRatio || '16/9';
@@ -73,9 +77,11 @@ export function createPlayer(
     isPip: false,
     quality: initialQuality,
     qualities: initialQualities,
-    captionsEnabled: false,
+    captionsEnabled: Boolean(options.tracks?.some((t) => t.default)),
+    hasCaptions: Boolean(options.tracks && options.tracks.length > 0),
     controlsVisible: true,
     aspectRatio: initialAspectRatio,
+    theme: options.theme || 'dark',
     error: null,
   });
 
@@ -122,6 +128,14 @@ export function createPlayer(
     async play(): Promise<void> {
       if (isDestroyed) return;
       try {
+        if (
+          videoElement.ended ||
+          (Number.isFinite(videoElement.duration) &&
+            videoElement.duration > 0 &&
+            videoElement.currentTime >= videoElement.duration)
+        ) {
+          videoElement.currentTime = 0;
+        }
         await videoElement.play();
       } catch (err) {
         console.warn('[maskflow] play() failed:', err);
@@ -148,6 +162,7 @@ export function createPlayer(
       const duration = Number.isFinite(videoElement.duration) ? videoElement.duration : Infinity;
       const targetTime = clamp(time, 0, duration);
       videoElement.currentTime = targetTime;
+      store.setState({ currentTime: targetTime, loading: true });
     },
 
     seekBy(delta: number): void {
@@ -249,6 +264,13 @@ export function createPlayer(
       store.setState({ aspectRatio: ratio });
     },
 
+    setTheme(theme: 'dark' | 'light' | 'auto'): void {
+      if (isDestroyed) return;
+      container.setAttribute('data-theme', theme);
+      store.setState({ theme });
+      events.emit('themechange', theme);
+    },
+
     destroy(): void {
       if (isDestroyed) return;
       isDestroyed = true;
@@ -260,7 +282,8 @@ export function createPlayer(
       fullscreenManager.destroy();
       pipManager.destroy();
       hlsAdapter?.destroy();
-      container.removeEventListener('click', handleButtonClick);
+      container.removeEventListener('click', handleControlBlur);
+      container.removeEventListener('pointerup', handleControlBlur);
       detachMedia();
 
       events.emit('destroy', undefined);
@@ -275,15 +298,26 @@ export function createPlayer(
   const autohideManager = createAutohideManager(container, player, options.autoHideDelay ?? 3000);
   const gestureManager = createGestureManager(container, player, options.gestures !== false);
 
-  const handleButtonClick = (e: MouseEvent) => {
-    const target = e.target as Element | null;
-    const btn = target?.closest?.('button.mf-btn, button.mf-big-play') as HTMLElement | null;
-    if (btn) {
-      btn.blur();
+  const handleControlBlur = (e: Event) => {
+    // Only blur pointer interactions (mouse/touch), preserving keyboard focus navigation (Tab/Enter)
+    if (
+      e instanceof MouseEvent &&
+      e.detail === 0 &&
+      !(e as unknown as { pointerType?: string }).pointerType
+    ) {
+      return;
+    }
+    const target = e.target as HTMLElement | null;
+    const interactive = target?.closest?.(
+      'button, input, select, textarea, [role="slider"], [role="button"], [tabindex]',
+    ) as HTMLElement | null;
+    if (interactive && typeof interactive.blur === 'function') {
+      interactive.blur();
     }
   };
 
-  container.addEventListener('click', handleButtonClick);
+  container.addEventListener('click', handleControlBlur);
+  container.addEventListener('pointerup', handleControlBlur);
 
   // Ready callback & event
   if (options.onReady) {

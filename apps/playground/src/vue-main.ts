@@ -1,39 +1,78 @@
 import { createApp, defineComponent, ref, h } from 'vue';
 import { MaskflowPlayer, type MaskflowVueInstance } from 'maskflow/vue';
+import type { MaskflowPlayer as MaskflowCorePlayer } from 'maskflow';
 import 'maskflow/styles.css';
 import './main.css';
 
-const MULTI_QUALITY_SOURCES = [
+const MASKFLOW_MULTI_QUALITY = [
   {
-    src: 'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF',
+    src: 'https://storage.maskflow.online/api/public/video/1eapXswH1pP_w1gVNp7N_8wzZuTh3wxVr',
     quality: '1080p',
     label: '1080p HD',
     height: 1080,
   },
   {
-    src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    src: 'https://storage.maskflow.online/api/public/video/1BX48blY-BxNk1fKp0pSSHQvpuCZO9x6l',
     quality: '720p',
     label: '720p',
     height: 720,
   },
   {
-    src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    src: 'https://storage.maskflow.online/api/public/video/1ezg2DtHPDf0-TbhW3EGjOY0VA4-mT-bt',
     quality: '480p',
     label: '480p',
     height: 480,
+  },
+  {
+    src: 'https://storage.maskflow.online/api/public/video/15il-NCbjt--HRn-q4cO7bdaw4sa0lkCW',
+    quality: '360p',
+    label: '360p',
+    height: 360,
+  },
+  {
+    src: 'https://storage.maskflow.online/api/public/video/1P_QhQaYTfQLccMnmLG-hmLAwqyeo8TBP',
+    quality: '240p',
+    label: '240p',
+    height: 240,
+  },
+  {
+    src: 'https://storage.maskflow.online/api/public/video/1AIR59Nz1_-e5GwXY8KcNHxwsyymovpnv',
+    quality: '144p',
+    label: '144p',
+    height: 144,
+  },
+];
+
+const SOURCES = {
+  multiQuality: MASKFLOW_MULTI_QUALITY,
+  v1080p: 'https://storage.maskflow.online/api/public/video/1eapXswH1pP_w1gVNp7N_8wzZuTh3wxVr',
+  v720p: 'https://storage.maskflow.online/api/public/video/1BX48blY-BxNk1fKp0pSSHQvpuCZO9x6l',
+  v480p: 'https://storage.maskflow.online/api/public/video/1ezg2DtHPDf0-TbhW3EGjOY0VA4-mT-bt',
+  v360p: 'https://storage.maskflow.online/api/public/video/15il-NCbjt--HRn-q4cO7bdaw4sa0lkCW',
+  v240p: 'https://storage.maskflow.online/api/public/video/1P_QhQaYTfQLccMnmLG-hmLAwqyeo8TBP',
+  v144p: 'https://storage.maskflow.online/api/public/video/1AIR59Nz1_-e5GwXY8KcNHxwsyymovpnv',
+  hls: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+};
+
+const DEMO_TRACKS = [
+  {
+    kind: 'subtitles' as const,
+    label: 'English',
+    srclang: 'en',
+    src: 'data:text/vtt;charset=utf-8,WEBVTT%0A%0A1%0A00:00:01.000%20-->%2000:00:05.000%0AWelcome%20to%20Maskflow%20Player!%0A%0A2%0A00:00:06.000%20-->%2000:00:15.000%0AGlassmorphic%20Video%20Player%20with%20Subtitles',
+    default: true,
   },
 ];
 
 const App = defineComponent({
   name: 'VuePlaygroundApp',
   setup() {
-    const sourceKey = ref<'user' | 'multi' | 'hls' | 'tears' | 'blazes'>('user');
-    const videoSrc = ref<string | typeof MULTI_QUALITY_SOURCES>(
-      'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF',
-    );
+    const sourceKey = ref<keyof typeof SOURCES>('multiQuality');
+    const videoSrc = ref<string | typeof MASKFLOW_MULTI_QUALITY>(MASKFLOW_MULTI_QUALITY);
     const theme = ref<'dark' | 'light' | 'auto'>('dark');
     const accent = ref('#8b5cf6');
     const aspectRatio = ref('16/9');
+    const withSubtitles = ref(false);
     const playerRef = ref<MaskflowVueInstance | null>(null);
 
     return () =>
@@ -66,64 +105,105 @@ const App = defineComponent({
                 'button',
                 {
                   type: 'button',
-                  className: `demo-btn ${sourceKey.value === 'user' ? 'active' : ''}`,
-                  onClick: () => {
-                    sourceKey.value = 'user';
-                    videoSrc.value =
-                      'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF';
+                  className: `demo-btn ${sourceKey.value === 'multiQuality' ? 'active' : ''}`,
+                  onClick: (e: MouseEvent) => {
+                    sourceKey.value = 'multiQuality';
+                    videoSrc.value = SOURCES.multiQuality;
+                    (e.currentTarget as HTMLElement).blur();
                   },
                 },
-                'User Video (MP4)',
+                'Multi-Quality (144p - 1080p)',
               ),
               h(
                 'button',
                 {
                   type: 'button',
-                  className: `demo-btn ${sourceKey.value === 'multi' ? 'active' : ''}`,
-                  onClick: () => {
-                    sourceKey.value = 'multi';
-                    videoSrc.value = MULTI_QUALITY_SOURCES;
+                  className: `demo-btn ${sourceKey.value === 'v1080p' ? 'active' : ''}`,
+                  onClick: (e: MouseEvent) => {
+                    sourceKey.value = 'v1080p';
+                    videoSrc.value = SOURCES.v1080p;
+                    (e.currentTarget as HTMLElement).blur();
                   },
                 },
-                'Multi-Quality (1080p/720p/480p)',
+                '1080p',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: `demo-btn ${sourceKey.value === 'v720p' ? 'active' : ''}`,
+                  onClick: (e: MouseEvent) => {
+                    sourceKey.value = 'v720p';
+                    videoSrc.value = SOURCES.v720p;
+                    (e.currentTarget as HTMLElement).blur();
+                  },
+                },
+                '720p',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: `demo-btn ${sourceKey.value === 'v480p' ? 'active' : ''}`,
+                  onClick: (e: MouseEvent) => {
+                    sourceKey.value = 'v480p';
+                    videoSrc.value = SOURCES.v480p;
+                    (e.currentTarget as HTMLElement).blur();
+                  },
+                },
+                '480p',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: `demo-btn ${sourceKey.value === 'v360p' ? 'active' : ''}`,
+                  onClick: (e: MouseEvent) => {
+                    sourceKey.value = 'v360p';
+                    videoSrc.value = SOURCES.v360p;
+                    (e.currentTarget as HTMLElement).blur();
+                  },
+                },
+                '360p',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: `demo-btn ${sourceKey.value === 'v240p' ? 'active' : ''}`,
+                  onClick: (e: MouseEvent) => {
+                    sourceKey.value = 'v240p';
+                    videoSrc.value = SOURCES.v240p;
+                    (e.currentTarget as HTMLElement).blur();
+                  },
+                },
+                '240p',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: `demo-btn ${sourceKey.value === 'v144p' ? 'active' : ''}`,
+                  onClick: (e: MouseEvent) => {
+                    sourceKey.value = 'v144p';
+                    videoSrc.value = SOURCES.v144p;
+                    (e.currentTarget as HTMLElement).blur();
+                  },
+                },
+                '144p',
               ),
               h(
                 'button',
                 {
                   type: 'button',
                   className: `demo-btn ${sourceKey.value === 'hls' ? 'active' : ''}`,
-                  onClick: () => {
+                  onClick: (e: MouseEvent) => {
                     sourceKey.value = 'hls';
-                    videoSrc.value = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+                    videoSrc.value = SOURCES.hls;
+                    (e.currentTarget as HTMLElement).blur();
                   },
                 },
-                'Mux HLS Stream (.m3u8)',
-              ),
-              h(
-                'button',
-                {
-                  type: 'button',
-                  className: `demo-btn ${sourceKey.value === 'tears' ? 'active' : ''}`,
-                  onClick: () => {
-                    sourceKey.value = 'tears';
-                    videoSrc.value =
-                      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4';
-                  },
-                },
-                'Tears of Steel',
-              ),
-              h(
-                'button',
-                {
-                  type: 'button',
-                  className: `demo-btn ${sourceKey.value === 'blazes' ? 'active' : ''}`,
-                  onClick: () => {
-                    sourceKey.value = 'blazes';
-                    videoSrc.value =
-                      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
-                  },
-                },
-                'Bigger Blazes',
+                'HLS Stream (.m3u8)',
               ),
             ]),
 
@@ -135,8 +215,9 @@ const App = defineComponent({
                   className: 'demo-select',
                   value: theme.value,
                   onChange: (e: Event) => {
-                    theme.value = (e.target as HTMLSelectElement).value as
-                      'dark' | 'light' | 'auto';
+                    const target = e.target as HTMLSelectElement;
+                    theme.value = target.value as 'dark' | 'light' | 'auto';
+                    target.blur();
                   },
                 },
                 [
@@ -148,13 +229,31 @@ const App = defineComponent({
             ]),
 
             h('div', { className: 'demo-group' }, [
+              h('span', { className: 'demo-label' }, 'Subtitles:'),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: `demo-btn ${withSubtitles.value ? 'active' : ''}`,
+                  onClick: (e: MouseEvent) => {
+                    withSubtitles.value = !withSubtitles.value;
+                    (e.currentTarget as HTMLElement).blur();
+                  },
+                },
+                withSubtitles.value ? 'CC Tracks (On)' : 'None (Hidden)',
+              ),
+            ]),
+
+            h('div', { className: 'demo-group' }, [
               h('span', { className: 'demo-label' }, 'Accent:'),
               h('input', {
                 type: 'color',
                 className: 'demo-color',
                 value: accent.value,
                 onInput: (e: Event) => {
-                  accent.value = (e.target as HTMLInputElement).value;
+                  const target = e.target as HTMLInputElement;
+                  accent.value = target.value;
+                  target.blur();
                 },
               }),
             ]),
@@ -167,7 +266,9 @@ const App = defineComponent({
                   className: 'demo-select',
                   value: aspectRatio.value,
                   onChange: (e: Event) => {
-                    aspectRatio.value = (e.target as HTMLSelectElement).value;
+                    const target = e.target as HTMLSelectElement;
+                    aspectRatio.value = target.value;
+                    target.blur();
                   },
                 },
                 [
@@ -191,12 +292,18 @@ const App = defineComponent({
                 ref: playerRef,
                 src: videoSrc.value,
                 title: `Maskflow Stream (Vue 3) — ${sourceKey.value.toUpperCase()}`,
+                tracks: withSubtitles.value ? DEMO_TRACKS : undefined,
                 theme: theme.value,
                 accent: accent.value,
                 aspectRatio: aspectRatio.value,
                 keyboard: true,
                 gestures: true,
                 persist: true,
+                onReady: (p: MaskflowCorePlayer) => {
+                  p.events.on('themechange', (t: 'dark' | 'light' | 'auto') => {
+                    theme.value = t;
+                  });
+                },
               }),
             ],
           ),
@@ -209,7 +316,10 @@ const App = defineComponent({
                 {
                   type: 'button',
                   className: 'demo-btn',
-                  onClick: () => playerRef.value?.toggle(),
+                  onClick: (e: MouseEvent) => {
+                    playerRef.value?.toggle();
+                    (e.currentTarget as HTMLElement).blur();
+                  },
                 },
                 'player.toggle()',
               ),
@@ -218,7 +328,10 @@ const App = defineComponent({
                 {
                   type: 'button',
                   className: 'demo-btn',
-                  onClick: () => playerRef.value?.seekBy(-10),
+                  onClick: (e: MouseEvent) => {
+                    playerRef.value?.seekBy(-10);
+                    (e.currentTarget as HTMLElement).blur();
+                  },
                 },
                 'player.seekBy(-10)',
               ),
@@ -227,7 +340,10 @@ const App = defineComponent({
                 {
                   type: 'button',
                   className: 'demo-btn',
-                  onClick: () => playerRef.value?.seekBy(10),
+                  onClick: (e: MouseEvent) => {
+                    playerRef.value?.seekBy(10);
+                    (e.currentTarget as HTMLElement).blur();
+                  },
                 },
                 'player.seekBy(+10)',
               ),
@@ -236,7 +352,10 @@ const App = defineComponent({
                 {
                   type: 'button',
                   className: 'demo-btn',
-                  onClick: () => playerRef.value?.toggleMute(),
+                  onClick: (e: MouseEvent) => {
+                    playerRef.value?.toggleMute();
+                    (e.currentTarget as HTMLElement).blur();
+                  },
                 },
                 'player.toggleMute()',
               ),
@@ -245,7 +364,10 @@ const App = defineComponent({
                 {
                   type: 'button',
                   className: 'demo-btn',
-                  onClick: () => playerRef.value?.toggleFullscreen(),
+                  onClick: (e: MouseEvent) => {
+                    playerRef.value?.toggleFullscreen();
+                    (e.currentTarget as HTMLElement).blur();
+                  },
                 },
                 'player.toggleFullscreen()',
               ),
@@ -256,7 +378,7 @@ const App = defineComponent({
   },
 });
 
-const appEl = document.getElementById('vue-app');
+const appEl = document.getElementById('app') || document.getElementById('vue-app');
 if (appEl) {
   createApp(App).mount(appEl);
 }

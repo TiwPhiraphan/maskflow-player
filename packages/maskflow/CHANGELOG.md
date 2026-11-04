@@ -1,5 +1,27 @@
 # maskflow
 
+## 0.4.0
+
+### Minor Changes
+
+- **Theme Customization (Dark, Light, Device)**:
+  - Added full Dark mode, Light mode, and OS Device auto-preference (`prefers-color-scheme`) support via `theme` prop and `player.setTheme()`.
+  - Added new CSS custom properties: `--mf-bg-panel`, `--mf-panel-text`, `--mf-panel-border`, `--mf-panel-hover`, `--mf-panel-shadow`, and `--mf-panel-kbd-*`.
+  - Added "Appearance" settings submenu in the Settings popup and mobile bottom sheet for instant theme toggling.
+- **Enhanced Subtitles & Closed Captions (CC)**:
+  - Smart subtitle visibility: automatically hides CC button when no `<track>` items are configured, and displays the CC button when subtitle tracks are present.
+  - Added `c` keyboard shortcut and dynamic tooltip (`Enable subtitles (c)` / `Disable subtitles (c)`) with `aria-pressed` synchronization.
+- **Optimistic Seek Locking**:
+  - Eliminated progress bar snapback/flicker when clicking or seeking along the timeline by optimistically locking until the media engine finishes seeked operations.
+- **Replay State at Video Ended**:
+  - Switched center and bottom play buttons to Replay icon on video end, with automated rewind (`currentTime = 0`) upon replay click.
+- **Global & Hover Keyboard Shortcuts**:
+  - Reworked keyboard manager to reliably capture shortcuts when hovering over the player or when clicking player buttons with focus blur, preventing input traps.
+- **Multi-Quality Stream Switching**:
+  - Seamless real-time quality switching across resolutions (1080p, 720p, 480p, 360p, 240p, 144p) preserving playback position and play state.
+- **Vue 3 Playground & Rendering Fix**:
+  - Fixed mount target binding in `vue.html` and verified complete rendering and controls parity with React.
+
 ## 0.3.0
 
 ### Minor Changes

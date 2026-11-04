@@ -54,7 +54,7 @@ import 'maskflow/styles.css';
 export function VideoDemo() {
   return (
     <MaskflowPlayer
-      src="https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF"
+      src="https://storage.maskflow.online/api/public/video/1eapXswH1pP_w1gVNp7N_8wzZuTh3wxVr"
       poster="/poster.jpg"
       theme="dark"
       accent="#8b5cf6"
@@ -70,6 +70,33 @@ export function VideoDemo() {
 }
 ```
 
+#### Multi-Quality Sources (React)
+
+```tsx
+const sources = [
+  {
+    src: 'https://storage.maskflow.online/api/public/video/1eapXswH1pP_w1gVNp7N_8wzZuTh3wxVr',
+    quality: '1080p',
+    label: '1080p HD',
+    height: 1080,
+  },
+  {
+    src: 'https://storage.maskflow.online/api/public/video/1BX48blY-BxNk1fKp0pSSHQvpuCZO9x6l',
+    quality: '720p',
+    label: '720p',
+    height: 720,
+  },
+  {
+    src: 'https://storage.maskflow.online/api/public/video/1ezg2DtHPDf0-TbhW3EGjOY0VA4-mT-bt',
+    quality: '480p',
+    label: '480p',
+    height: 480,
+  },
+];
+
+<MaskflowPlayer src={sources} />
+```
+
 ### Vue 3
 
 ```vue
@@ -80,7 +107,7 @@ import 'maskflow/styles.css';
 
 <template>
   <MaskflowPlayer
-    src="https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF"
+    src="https://storage.maskflow.online/api/public/video/1eapXswH1pP_w1gVNp7N_8wzZuTh3wxVr"
     poster="/poster.jpg"
     theme="dark"
     accent="#8b5cf6"
@@ -102,7 +129,7 @@ import 'maskflow/styles.css';
 
 const videoEl = document.querySelector('video')!;
 const player = createPlayer(videoEl, {
-  src: 'https://storage.maskflow.online/api/public/video/1UInifytWbGldZA0I3A3jg9n_abi6oYGF',
+  src: 'https://storage.maskflow.online/api/public/video/1eapXswH1pP_w1gVNp7N_8wzZuTh3wxVr',
   theme: 'dark',
   accent: '#8b5cf6',
   aspectRatio: '16/9',
@@ -146,16 +173,18 @@ When the player container is focused or hovered:
 | Shortcut       | Action                             |
 | -------------- | ---------------------------------- |
 | `Space` or `K` | Toggle Play / Pause                |
-| `←` / `→`      | Seek backward / forward 5 seconds  |
+| `←` / `→`      | Seek backward / forward 10 seconds |
 | `J` / `L`      | Seek backward / forward 10 seconds |
 | `↑` / `↓`      | Increase / decrease volume by 5%   |
 | `M`            | Toggle Mute / Unmute               |
 | `F`            | Toggle Fullscreen                  |
 | `C`            | Toggle Captions / Subtitles        |
-| `P`            | Toggle Picture-in-Picture          |
+| `S`            | Toggle Settings Menu               |
+| `P` or `I`     | Toggle Picture-in-Picture          |
 | `0` – `9`      | Jump to 0% – 90% of duration       |
 | `<` / `>`      | Decrease / increase playback speed |
-| `Escape`       | Close settings dropdown menu       |
+| `?` or `/`     | View Keyboard Shortcuts modal      |
+| `Escape`       | Close Settings / Shortcuts menu    |
 
 ---
 
@@ -175,6 +204,12 @@ The player is styled with plain CSS via standard CSS variables (`--mf-*`). You c
   --mf-shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
   --mf-text: #ffffff;
   --mf-text-muted: rgba(255, 255, 255, 0.7);
+
+  /* Theme Panels (Dark / Light) */
+  --mf-bg-panel: rgba(28, 28, 28, 0.96);
+  --mf-panel-text: #ffffff;
+  --mf-panel-border: rgba(255, 255, 255, 0.12);
+  --mf-panel-hover: rgba(255, 255, 255, 0.08);
 
   /* Geometry & Layout */
   --mf-aspect-ratio: 16 / 9;

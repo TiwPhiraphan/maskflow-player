@@ -31,6 +31,7 @@ describe('AutohideManager', () => {
       captionsEnabled: false,
       controlsVisible: true,
       aspectRatio: '16/9',
+      theme: 'dark',
       error: null,
     };
 

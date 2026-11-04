@@ -37,7 +37,7 @@ export const BigPlayButton: React.FC<BigPlayButtonProps> = ({ player, state, cla
   return (
     <button
       type="button"
-      className={`mf-big-play ${isPlaying ? 'mf-playing' : ''} ${className}`.trim()}
+      className={`mf-big-play ${isPlaying ? 'mf-playing' : ''} ${isEnded ? 'mf-ended' : ''} ${className}`.trim()}
       title={label}
       aria-label={label}
       aria-pressed={isPlaying}

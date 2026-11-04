@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { MaskflowPlayer, PlayerState } from '../../core/types';
 import { formatTime } from '../../core/utils/time';
 import { clamp } from '../../core/utils/math';
@@ -14,17 +14,34 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state, classNa
   const [isDragging, setIsDragging] = useState(false);
   const [dragPercent, setDragPercent] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState<number | null>(null);
+  const [pendingSeekTime, setPendingSeekTime] = useState<number | null>(null);
 
   const duration = state.duration > 0 ? state.duration : 0;
   const currentTime = state.currentTime;
 
-  // While dragging, use local state for the thumb position and ignore timeupdate
+  useEffect(() => {
+    const unsub = player.events.on('seeked', () => {
+      setPendingSeekTime(null);
+    });
+    return unsub;
+  }, [player]);
+
+  // If currentTime has caught up to pendingSeekTime, clear pending
+  useEffect(() => {
+    if (pendingSeekTime !== null && Math.abs(currentTime - pendingSeekTime) < 0.25) {
+      setPendingSeekTime(null);
+    }
+  }, [currentTime, pendingSeekTime]);
+
+  // While dragging or waiting for seek confirmation, hold position to prevent snapback
   const activePercent =
     isDragging && dragPercent !== null
       ? dragPercent
-      : duration > 0
-        ? clamp((currentTime / duration) * 100, 0, 100)
-        : 0;
+      : pendingSeekTime !== null && duration > 0
+        ? clamp((pendingSeekTime / duration) * 100, 0, 100)
+        : duration > 0
+          ? clamp((currentTime / duration) * 100, 0, 100)
+          : 0;
 
   const bufferedPercent = clamp(state.buffered * 100, 0, 100);
 
@@ -66,10 +83,13 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state, classNa
       finalRatio = calculateRatio(clientX);
     }
 
-    player.seek(finalRatio * duration);
+    const targetTime = finalRatio * duration;
+    setPendingSeekTime(targetTime);
+    player.seek(targetTime);
     setIsDragging(false);
     setDragPercent(null);
     player.lockControls(false);
+    target.blur?.();
 
     try {
       target.releasePointerCapture(pointerId);
@@ -101,16 +121,22 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ player, state, classNa
       player.seekBy(10);
     } else if (e.key === 'Home') {
       e.preventDefault();
+      setPendingSeekTime(0);
       player.seek(0);
     } else if (e.key === 'End') {
       e.preventDefault();
+      setPendingSeekTime(duration);
       player.seek(duration);
     }
   };
 
   const hoverTime = hoverPosition !== null && duration > 0 ? hoverPosition * duration : 0;
   const displayTime =
-    isDragging && dragPercent !== null ? (dragPercent / 100) * duration : currentTime;
+    isDragging && dragPercent !== null
+      ? (dragPercent / 100) * duration
+      : pendingSeekTime !== null
+        ? pendingSeekTime
+        : currentTime;
 
   return (
     <div

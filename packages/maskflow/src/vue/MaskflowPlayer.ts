@@ -25,6 +25,7 @@ import {
   VolumeMutedIcon,
   SettingsIcon,
   PipIcon,
+  CaptionsIcon,
   FullscreenEnterIcon,
   FullscreenExitIcon,
   ReplayIcon,
@@ -119,7 +120,7 @@ export const MaskflowPlayer = defineComponent({
 
     // Settings menu state
     const isMenuOpen = ref(false);
-    const currentMenuView = ref<'main' | 'speed' | 'quality' | 'shortcuts'>('main');
+    const currentMenuView = ref<'main' | 'speed' | 'quality' | 'theme' | 'shortcuts'>('main');
     const settingsContainerRef = ref<HTMLDivElement | null>(null);
 
     const closeSettings = () => {
@@ -177,9 +178,19 @@ export const MaskflowPlayer = defineComponent({
     const hoverPosition = ref<number | null>(null);
     const isProgressDragging = ref(false);
     const progressDragPercent = ref<number | null>(null);
+    const pendingSeekTime = ref<number | null>(null);
 
     // Reactive store state
     const state = useMaskflow(playerInstance);
+
+    watch(
+      () => state.value.currentTime,
+      (newTime) => {
+        if (pendingSeekTime.value !== null && Math.abs(newTime - pendingSeekTime.value) < 0.25) {
+          pendingSeekTime.value = null;
+        }
+      },
+    );
 
     // Initialize player
     const initPlayer = () => {
@@ -239,6 +250,10 @@ export const MaskflowPlayer = defineComponent({
         toggleSettings();
       });
 
+      player.events.on('seeked', () => {
+        pendingSeekTime.value = null;
+      });
+
       player.events.on('toggleshortcuts', () => {
         if (!isMenuOpen.value) {
           currentMenuView.value = 'shortcuts';
@@ -263,6 +278,15 @@ export const MaskflowPlayer = defineComponent({
       },
     );
 
+    watch(
+      () => props.theme,
+      (newTheme) => {
+        if (newTheme && playerInstance.value) {
+          playerInstance.value.setTheme(newTheme);
+        }
+      },
+    );
+
     onBeforeUnmount(() => {
       document.removeEventListener('pointerdown', handleOutsideClick);
       document.removeEventListener('keydown', handleKeyDown);
@@ -284,6 +308,7 @@ export const MaskflowPlayer = defineComponent({
       toggleMute: () => playerInstance.value?.toggleMute(),
       setRate: (r: number) => playerInstance.value?.setRate(r),
       setQuality: (q: string | number) => playerInstance.value?.setQuality(q),
+      setTheme: (t: 'dark' | 'light' | 'auto') => playerInstance.value?.setTheme(t),
       toggleFullscreen: () => playerInstance.value?.toggleFullscreen(),
       togglePip: () => playerInstance.value?.togglePip(),
       toggleCaptions: () => playerInstance.value?.toggleCaptions(),
@@ -331,9 +356,11 @@ export const MaskflowPlayer = defineComponent({
         const activePercent =
           isProgressDragging.value && progressDragPercent.value !== null
             ? progressDragPercent.value
-            : duration > 0
-              ? Math.min(100, Math.max(0, (s.currentTime / duration) * 100))
-              : 0;
+            : pendingSeekTime.value !== null && duration > 0
+              ? Math.min(100, Math.max(0, (pendingSeekTime.value / duration) * 100))
+              : duration > 0
+                ? Math.min(100, Math.max(0, (s.currentTime / duration) * 100))
+                : 0;
 
         const bufferedPercent = Math.min(100, Math.max(0, s.buffered * 100));
         const hoverTime =
@@ -341,7 +368,9 @@ export const MaskflowPlayer = defineComponent({
         const displayTime =
           isProgressDragging.value && progressDragPercent.value !== null
             ? (progressDragPercent.value / 100) * duration
-            : s.currentTime;
+            : pendingSeekTime.value !== null
+              ? pendingSeekTime.value
+              : s.currentTime;
 
         const endDrag = (target: HTMLElement, pointerId: number, clientX?: number) => {
           if (!isProgressDragging.value) return;
@@ -352,10 +381,13 @@ export const MaskflowPlayer = defineComponent({
               finalRatio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
             }
           }
-          p.seek(finalRatio * duration);
+          const targetTime = finalRatio * duration;
+          pendingSeekTime.value = targetTime;
+          p.seek(targetTime);
           isProgressDragging.value = false;
           progressDragPercent.value = null;
           p.lockControls(false);
+          target.blur?.();
           try {
             target.releasePointerCapture(pointerId);
           } catch {
@@ -525,6 +557,25 @@ export const MaskflowPlayer = defineComponent({
                         className: 'mf-menu-item',
                         role: 'menuitem',
                         onClick: () => {
+                          currentMenuView.value = 'theme';
+                        },
+                      },
+                      [
+                        h('span', 'Appearance'),
+                        h(
+                          'span',
+                          { className: 'mf-menu-item-value' },
+                          `${s.theme === 'light' ? 'Light' : s.theme === 'dark' ? 'Dark' : 'Auto'} ›`,
+                        ),
+                      ],
+                    ),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'mf-menu-item',
+                        role: 'menuitem',
+                        onClick: () => {
                           currentMenuView.value = 'shortcuts';
                         },
                       },
@@ -626,8 +677,9 @@ export const MaskflowPlayer = defineComponent({
                           ),
                         ),
                       ]
-                    : [
-                        h(
+                    : currentMenuView.value === 'quality'
+                      ? [
+                          h(
                           'button',
                           {
                             type: 'button',
@@ -655,7 +707,45 @@ export const MaskflowPlayer = defineComponent({
                             [h('span', q.label), s.quality === q.id ? h('span', '✓') : null],
                           ),
                         ),
-                      ],
+                      ]
+                    : currentMenuView.value === 'theme'
+                      ? [
+                          h(
+                            'button',
+                            {
+                              type: 'button',
+                              className: 'mf-menu-item mf-menu-item-back',
+                              onClick: () => {
+                                currentMenuView.value = 'main';
+                              },
+                            },
+                            [h('span', '‹ Back to settings')],
+                          ),
+                          ...(
+                            [
+                              { id: 'dark', label: 'Dark theme' },
+                              { id: 'light', label: 'Light theme' },
+                              { id: 'auto', label: 'Device theme' },
+                            ] as const
+                          ).map(({ id, label: tLabel }) =>
+                            h(
+                              'button',
+                              {
+                                key: id,
+                                type: 'button',
+                                className: 'mf-menu-item',
+                                role: 'menuitemradio',
+                                'aria-checked': s.theme === id,
+                                onClick: () => {
+                                  p.setTheme(id);
+                                  closeSettings();
+                                },
+                              },
+                              [h('span', tLabel), s.theme === id ? h('span', '✓') : null],
+                            ),
+                          ),
+                        ]
+                    : [],
             ],
           ),
         ]);
@@ -674,6 +764,7 @@ export const MaskflowPlayer = defineComponent({
         const volLabel = isMuted ? 'Unmute (m)' : 'Mute (m)';
         const fsLabel = s.isFullscreen ? 'Exit fullscreen (f)' : 'Fullscreen (f)';
         const pipLabel = 'Picture-in-picture (p)';
+        const ccLabel = s.captionsEnabled ? 'Disable subtitles (c)' : 'Enable subtitles (c)';
 
         return h(
           'div',
@@ -685,7 +776,7 @@ export const MaskflowPlayer = defineComponent({
                   'button',
                   {
                     type: 'button',
-                    className: 'mf-btn mf-btn-play mf-desktop-only',
+                    className: `mf-btn mf-btn-play mf-desktop-only ${isEnded ? 'mf-ended' : ''}`,
                     title: playLabel,
                     'aria-label': playLabel,
                     'aria-pressed': isPlaying,
@@ -729,6 +820,7 @@ export const MaskflowPlayer = defineComponent({
                           Math.min(1, (e.clientX - rect.left) / rect.width),
                         );
                         p.setVolume(ratio);
+                        target.blur?.();
                       },
                     },
                     [
@@ -767,6 +859,26 @@ export const MaskflowPlayer = defineComponent({
                     'aria-label': `Duration ${formatTime(s.duration)}`,
                   },
                   formatTime(s.duration),
+                )
+              : null,
+
+            // Subtitles button (visible when tracks exist)
+            hasControl('captions') &&
+            (s.hasCaptions ?? Boolean(props.tracks && props.tracks.length > 0))
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'mf-btn mf-btn-captions',
+                    title: ccLabel,
+                    'aria-label': ccLabel,
+                    'aria-pressed': s.captionsEnabled,
+                    onClick: (e: MouseEvent) => {
+                      p.toggleCaptions();
+                      (e.currentTarget as HTMLElement).blur();
+                    },
+                  },
+                  [CaptionsIcon()],
                 )
               : null,
 
@@ -831,7 +943,7 @@ export const MaskflowPlayer = defineComponent({
           'button',
           {
             type: 'button',
-            className: `mf-big-play ${isPlaying ? 'mf-playing' : ''}`,
+            className: `mf-big-play ${isPlaying ? 'mf-playing' : ''} ${isEnded ? 'mf-ended' : ''}`,
             title: label,
             'aria-label': label,
             'aria-pressed': isPlaying,
@@ -846,7 +958,7 @@ export const MaskflowPlayer = defineComponent({
         {
           ref: containerRef,
           className: playerClasses,
-          'data-theme': props.theme,
+          'data-theme': s.theme || props.theme,
           style: containerStyle,
         },
         [

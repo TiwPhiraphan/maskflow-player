@@ -18,7 +18,7 @@ export const PlayButton: React.FC<PlayButtonProps> = ({ player, state, className
   return (
     <button
       type="button"
-      className={`mf-btn mf-btn-play ${className}`.trim()}
+      className={`mf-btn mf-btn-play ${isEnded ? 'mf-ended' : ''} ${className}`.trim()}
       title={label}
       aria-label={label}
       aria-pressed={isPlaying}
