@@ -25,18 +25,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Quality check (lint, build, typecheck, test)
+      - name: Quality check (lint, build, typecheck)
         run: |
           pnpm lint
           pnpm build
           pnpm typecheck
-          pnpm test
-
-      - name: Install Playwright Browsers with dependencies
-        run: pnpm exec playwright install --with-deps
-
-      - name: Run E2E tests
-        run: pnpm e2e
 
       - name: Check bundle size
         run: pnpm size

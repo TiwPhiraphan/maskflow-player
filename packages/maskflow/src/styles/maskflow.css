@@ -432,6 +432,7 @@
   align-items: center;
   cursor: pointer;
   touch-action: none;
+  margin: 0 8px;
 }
 
 /* Expanded hit area */
@@ -910,7 +911,11 @@
 
   .mf-time {
     font-size: 0.76rem;
-    padding: 0 2px;
+    padding: 0 4px;
+  }
+
+  .mf-progress {
+    margin: 0 10px;
   }
 
   .mf-bottom-bar {
@@ -960,6 +965,10 @@
 @container mf-player (max-width: 360px) {
   .mf-time {
     font-size: 0.72rem;
+    padding: 0 2px;
+  }
+  .mf-progress {
+    margin: 0 8px;
   }
   .mf-bottom-bar {
     gap: 2px;
