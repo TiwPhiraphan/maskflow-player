@@ -87,3 +87,4 @@ describe('Loading State (UPDATE-UI Spec)', () => {
     expect(computeLoading(mockIdleVideo)).toBe(false);
   });
 });
+
