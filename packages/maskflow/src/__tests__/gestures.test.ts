@@ -177,4 +177,42 @@ describe('GestureManager', () => {
 
     manager.destroy();
   });
+
+  it('tapping on an interactive control does not schedule a single-tap toggle or trigger double tap', () => {
+    mockState.controlsVisible = true;
+    const btn = document.createElement('button');
+    btn.className = 'mf-btn mf-fullscreen-btn';
+    target.appendChild(btn);
+
+    const manager = createGestureManager(target, mockPlayer);
+
+    const downEvent = new MouseEvent('pointerdown', { bubbles: true, clientX: 500, clientY: 250 });
+    Object.defineProperty(downEvent, 'isPrimary', { value: true });
+    btn.dispatchEvent(downEvent);
+
+    const upEvent = new MouseEvent('pointerup', { bubbles: true, clientX: 500, clientY: 250 });
+    Object.defineProperty(upEvent, 'isPrimary', { value: true });
+    btn.dispatchEvent(upEvent);
+
+    vi.advanceTimersByTime(500);
+    expect(mockPlayer.setControlsVisible).not.toHaveBeenCalled();
+
+    manager.destroy();
+  });
+
+  it('single tap clears lastTapTime after timer so subsequent tap does not trigger double tap', () => {
+    mockState.controlsVisible = true;
+    const manager = createGestureManager(target, mockPlayer);
+
+    // Tap 1
+    firePointer(850, 250);
+    vi.advanceTimersByTime(300); // Wait for single-tap timer to resolve
+    expect(mockPlayer.setControlsVisible).toHaveBeenCalledWith(false);
+
+    // Tap 2 at 850px after timer expired
+    firePointer(850, 250);
+    expect(mockPlayer.seekBy).not.toHaveBeenCalled();
+
+    manager.destroy();
+  });
 });

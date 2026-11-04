@@ -121,4 +121,26 @@ describe('Player', () => {
     player.destroy();
     expect(onDestroy).toHaveBeenCalled();
   });
+
+  it('does not blur interactive controls on pointerup to prevent canceling mobile touch clicks', () => {
+    const container = document.createElement('div');
+    container.appendChild(video);
+    const player = createPlayer(video, {
+      src: 'https://example.com/video.mp4',
+      container,
+    });
+
+    const button = document.createElement('button');
+    button.className = 'mf-btn';
+    button.blur = vi.fn();
+    container.appendChild(button);
+
+    const pointerUpEvent = new Event('pointerup', { bubbles: true });
+    Object.defineProperty(pointerUpEvent, 'pointerType', { value: 'touch' });
+    button.dispatchEvent(pointerUpEvent);
+
+    expect(button.blur).not.toHaveBeenCalled();
+
+    player.destroy();
+  });
 });

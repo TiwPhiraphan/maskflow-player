@@ -20,7 +20,10 @@ export function createKeyboardManager(
   const onPointerLeave = () => {
     isHovered = false;
   };
-  const onPointerDown = () => {
+  const onPointerDown = (e: PointerEvent) => {
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+      return;
+    }
     if (
       typeof document !== 'undefined' &&
       document.activeElement !== container &&

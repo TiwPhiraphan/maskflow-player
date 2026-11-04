@@ -83,6 +83,14 @@ export function createAutohideManager(
     if (e.pointerType === 'touch' || e.pointerType === 'pen') {
       return;
     }
+    // Mobile / touch devices with coarse pointers should never hide on pointer leave
+    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)')?.matches) {
+      return;
+    }
+    // Only real desktop mouse cursors leaving should trigger hide
+    if (e.pointerType !== 'mouse') {
+      return;
+    }
     if (player.getState().status === 'playing' && !shouldStayVisible()) {
       hide();
     }
@@ -92,7 +100,15 @@ export function createAutohideManager(
   container.addEventListener('pointermove', handleActivity);
   container.addEventListener('pointerdown', handlePointerDown);
   container.addEventListener('keydown', handleActivity);
-  container.addEventListener('focusin', handleActivity);
+  const handleFocusIn = (e: FocusEvent) => {
+    // Only show controls if keyboard focus moved to an interactive child element
+    // Never trigger show() when the container itself receives focus
+    if (e.target && e.target !== container && container.contains(e.target as Node)) {
+      show();
+    }
+  };
+
+  container.addEventListener('focusin', handleFocusIn);
   container.addEventListener('pointerleave', handlePointerLeave);
 
   // Playback state changes
@@ -135,7 +151,7 @@ export function createAutohideManager(
       container.removeEventListener('pointermove', handleActivity);
       container.removeEventListener('pointerdown', handlePointerDown);
       container.removeEventListener('keydown', handleActivity);
-      container.removeEventListener('focusin', handleActivity);
+      container.removeEventListener('focusin', handleFocusIn);
       container.removeEventListener('pointerleave', handlePointerLeave);
       unsubPlay();
       unsubPause();

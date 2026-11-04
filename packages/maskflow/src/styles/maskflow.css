@@ -170,9 +170,10 @@
   transition: opacity var(--mf-transition);
 }
 
-.mf-controls-hidden .mf-controls-wrapper {
+.mf-controls-hidden .mf-controls-wrapper,
+.mf-controls-hidden .mf-controls-wrapper * {
   opacity: 0;
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
 /* On error: turns solid black */

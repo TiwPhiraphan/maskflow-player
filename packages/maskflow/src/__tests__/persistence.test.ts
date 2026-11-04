@@ -8,6 +8,22 @@ describe('PersistenceManager', () => {
   let events: ReturnType<typeof createEventEmitter<PlayerEvents>>;
 
   beforeEach(() => {
+    const store = new Map<string, string>();
+    const mockStorage = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, val: string) => store.set(key, String(val)),
+      removeItem: (key: string) => store.delete(key),
+      clear: () => store.clear(),
+      get length() {
+        return store.size;
+      },
+      key: (index: number) => Array.from(store.keys())[index] ?? null,
+    };
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: mockStorage,
+      writable: true,
+      configurable: true,
+    });
     localStorage.clear();
     events = createEventEmitter<PlayerEvents>();
 

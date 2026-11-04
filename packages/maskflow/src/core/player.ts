@@ -283,7 +283,6 @@ export function createPlayer(
       pipManager.destroy();
       hlsAdapter?.destroy();
       container.removeEventListener('click', handleControlBlur);
-      container.removeEventListener('pointerup', handleControlBlur);
       detachMedia();
 
       events.emit('destroy', undefined);
@@ -317,8 +316,7 @@ export function createPlayer(
   };
 
   container.addEventListener('click', handleControlBlur);
-  container.addEventListener('pointerup', handleControlBlur);
-
+  
   // Ready callback & event
   if (options.onReady) {
     try {

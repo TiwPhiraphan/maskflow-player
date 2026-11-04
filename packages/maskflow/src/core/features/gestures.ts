@@ -51,20 +51,31 @@ export function createGestureManager(
     if (!target || !(target instanceof Element)) return false;
     return Boolean(
       target.closest(
-        'button, input, select, textarea, [role="button"], [role="slider"], [role="menu"], [role="menuitem"], .mf-bottom-bar, .mf-top-bar, .mf-menu, .mf-big-play',
+        'button, input, select, textarea, [role="button"], [role="slider"], [role="menu"], [role="menuitem"], .mf-bottom-bar, .mf-top-bar, .mf-menu, .mf-big-play, .mf-center-action',
       ),
     );
   }
 
   function handlePointerDown(event: PointerEvent): void {
     if (!event.isPrimary) return;
+    if (isInteractiveElement(event.target)) {
+      clearTapTimer();
+      lastTapTime = 0;
+      tapControlsVisible = null;
+      return;
+    }
     isMenuDismissed = Boolean(targetElement.querySelector('.mf-menu.mf-menu-open'));
     tapControlsVisible = player.getState().controlsVisible;
   }
 
   function handlePointerUp(event: PointerEvent): void {
     if (!isEnabled) return;
-    if (isInteractiveElement(event.target)) return;
+    if (isInteractiveElement(event.target)) {
+      clearTapTimer();
+      lastTapTime = 0;
+      tapControlsVisible = null;
+      return;
+    }
 
     // Only handle primary pointer
     if (!event.isPrimary) return;
@@ -73,6 +84,8 @@ export function createGestureManager(
     if (isMenuDismissed) {
       isMenuDismissed = false;
       tapControlsVisible = null;
+      clearTapTimer();
+      lastTapTime = 0;
       return;
     }
 
@@ -167,6 +180,7 @@ export function createGestureManager(
         // Single tap outside seek mode toggles controls visibility
         player.setControlsVisible(!initialControlsVisible);
         tapTimer = null;
+        lastTapTime = 0;
       }, 250);
     }
   }
