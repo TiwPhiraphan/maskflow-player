@@ -2,8 +2,11 @@
 
 > A modern, accessible, mobile-first video player with a futuristic glassmorphism interface.
 
+[![Website: player.maskflow.online](https://img.shields.io/badge/Website-player.maskflow.online-8b5cf6?style=flat&logo=globe)](https://player.maskflow.online/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/maskflow.svg)](https://www.npmjs.com/package/maskflow)
+
+🌐 **Official Website & Live Demo:** [https://player.maskflow.online/](https://player.maskflow.online/)
 
 Maskflow is published as a single unscoped npm package (`maskflow`) with subpath exports:
 

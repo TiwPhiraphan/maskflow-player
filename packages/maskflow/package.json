@@ -1,13 +1,14 @@
 {
   "name": "maskflow",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "type": "module",
   "description": "Modern, accessible, mobile-first video player with futuristic glassmorphism controls",
   "author": "TiwPhiraphan",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TiwPhiraphan/maskflow-player.git"
+    "url": "git+https://github.com/TiwPhiraphan/maskflow-player.git",
+    "directory": "packages/maskflow"
   },
   "engines": {
     "node": ">=18"
@@ -110,5 +111,6 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "vue": ">=3.3"
-  }
+  },
+  "homepage": "https://player.maskflow.online/"
 }

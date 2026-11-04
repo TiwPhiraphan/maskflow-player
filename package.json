@@ -47,5 +47,10 @@
   "workspaces": [
     "packages/*",
     "apps/*"
-  ]
+  ],
+  "homepage": "https://player.maskflow.online/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TiwPhiraphan/maskflow-player.git"
+  }
 }
